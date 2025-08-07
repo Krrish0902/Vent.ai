@@ -55,7 +55,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 to-transparent pt-4 pb-6"
+      className="pt-4"
     >
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-end space-x-3">

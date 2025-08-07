@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, Menu, ChevronLeft } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { Header } from './Header';
 import { ThreadList } from '../Sidebar/ThreadList';
@@ -11,15 +11,15 @@ import { ApiKeySetup } from '../Settings/ApiKeySetup';
 export const MainLayout: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { settings, loadSettings } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
 
-  const hasApiKeys = settings?.apiKeys?.length > 0;
+  const hasApiKeys = (settings?.apiKeys?.length ?? 0) > 0;
   const needsSetup = !hasApiKeys;
-  const aiName = settings?.preferences.aiName || 'Riley';
 
   if (needsSetup) {
     return (
@@ -55,9 +55,33 @@ export const MainLayout: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Desktop Sidebar */}
-        <div className="hidden md:block w-80 flex-shrink-0">
-          <ThreadList />
-        </div>
+        <motion.div
+          initial={false}
+          animate={{
+            width: sidebarCollapsed ? 60 : 320,
+          }}
+          transition={{
+            duration: 0.3,
+            ease: "easeInOut"
+          }}
+          className="hidden md:block relative flex-shrink-0 border-r border-white/20 dark:border-gray-700/20"
+        >
+          <ThreadList isCollapsed={sidebarCollapsed} />
+
+          {/* Sidebar edge toggle handle (desktop only) */}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="hidden md:flex items-center justify-center absolute top-1/2 -right-3 -translate-y-1/2 w-7 h-12 rounded-md shadow-md bg-white/90 dark:bg-gray-800/90 border border-white/30 dark:border-gray-700/40 hover:bg-white dark:hover:bg-gray-800 transition-colors z-20"
+          >
+            {sidebarCollapsed ? (
+              <Menu className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+            )}
+          </button>
+        </motion.div>
 
         {/* Mobile Sidebar */}
         <AnimatePresence>
@@ -77,7 +101,7 @@ export const MainLayout: React.FC = () => {
                 transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                 className="fixed left-0 top-0 h-full w-80 z-50 md:hidden"
               >
-                <ThreadList />
+                <ThreadList onClose={() => setShowSidebar(false)} />
               </motion.div>
             </>
           )}

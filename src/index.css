@@ -1,3 +1,71 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-teal-500/60 dark:bg-teal-400/60 rounded-full;
+    transition: background-color 0.2s ease;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-teal-600/80 dark:bg-teal-300/80;
+  }
+  
+  /* Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(20, 184, 166, 0.6) transparent; /* teal-500 with opacity */
+  }
+  
+  /* Dark mode for Firefox */
+  .dark .custom-scrollbar {
+    scrollbar-color: rgba(45, 212, 191, 0.6) transparent; /* teal-400 with opacity */
+  }
+  
+  /* Thin scrollbar variant with minimal spacing */
+  .custom-scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-teal-400/50 dark:bg-teal-500/50 rounded-full;
+    transition: background-color 0.2s ease;
+  }
+  
+  .custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-teal-500/70 dark:bg-teal-400/70;
+  }
+  
+  /* Firefox thin */
+  .custom-scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(45, 212, 191, 0.5) transparent; /* teal-400 with opacity */
+  }
+  
+  .dark .custom-scrollbar-thin {
+    scrollbar-color: rgba(20, 184, 166, 0.5) transparent; /* teal-500 with opacity */
+  }
+
+  /* Remove scrollbar gutter/reserved space */
+  .custom-scrollbar,
+  .custom-scrollbar-thin {
+    scrollbar-gutter: stable;
+  }
+}

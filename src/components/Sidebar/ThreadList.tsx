@@ -3,9 +3,17 @@ import { motion } from 'framer-motion';
 import { useThreadStore } from '../../stores/threadStore';
 import { ThreadItem } from './ThreadItem';
 import { Button } from '../UI/Button';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 
-export const ThreadList: React.FC = () => {
+interface ThreadListProps {
+  isCollapsed?: boolean;
+  onClose?: () => void;
+}
+
+export const ThreadList: React.FC<ThreadListProps> = ({ 
+  isCollapsed = false, 
+  onClose 
+}) => {
   const {
     threads,
     currentThreadId,
@@ -30,6 +38,7 @@ export const ThreadList: React.FC = () => {
     try {
       const threadId = await createThread();
       setCurrentThread(threadId);
+      onClose?.(); // Close mobile sidebar after creating thread
     } catch (error) {
       console.error('Failed to create thread:', error);
     }
@@ -37,6 +46,7 @@ export const ThreadList: React.FC = () => {
 
   const handleThreadClick = (threadId: string) => {
     setCurrentThread(threadId);
+    onClose?.(); // Close mobile sidebar after selecting thread
   };
 
   const handlePin = (threadId: string) => {
@@ -56,19 +66,53 @@ export const ThreadList: React.FC = () => {
     }
   };
 
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+        {/* Collapsed Header */}
+        <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+          <Button
+            onClick={handleNewThread}
+            size="sm"
+            className="p-2 w-full"
+            title="New conversation"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Collapsed Thread List */}
+        
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-r border-white/20 dark:border-gray-700/20">
+    <div className="h-full flex flex-col bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
       {/* Header */}
       <div className="p-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Conversations</h2>
-          <Button
-            onClick={handleNewThread}
-            size="sm"
-            className="p-2 min-w-0"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleNewThread}
+              size="sm"
+              className="p-2 min-w-0"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            {/* Mobile close button */}
+            {onClose && (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+                className="p-2 min-w-0 md:hidden"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Search */}
@@ -90,7 +134,7 @@ export const ThreadList: React.FC = () => {
       </div>
 
       {/* Thread List */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading conversations...</div>

@@ -1,19 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Heart, Menu } from 'lucide-react';
+import { Settings, Heart, Menu, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '../UI/Button';
 import { useSettingsStore } from '../../stores/settingsStore';
 
 interface HeaderProps {
   onSettingsClick: () => void;
   onMenuClick: () => void;
+  onSidebarToggle?: () => void;
   showMenuButton?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   onSettingsClick, 
   onMenuClick, 
-  showMenuButton = false 
+  onSidebarToggle,
+  showMenuButton = false,
+  sidebarCollapsed = false
 }) => {
   const { settings } = useSettingsStore();
   const aiName = settings?.preferences.aiName || 'Riley';
@@ -26,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
+          {/* Mobile menu button */}
           {showMenuButton && (
             <Button
               variant="ghost"
@@ -34,6 +39,23 @@ export const Header: React.FC<HeaderProps> = ({
               className="md:hidden p-2"
             >
               <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          
+          {/* Desktop sidebar toggle */}
+          {onSidebarToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSidebarToggle}
+              className="hidden md:flex p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeft className="w-5 h-5" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5" />
+              )}
             </Button>
           )}
           

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Key, Download, Palette, Shield } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -14,7 +14,32 @@ type SettingsTab = 'api-keys' | 'data' | 'preferences' | 'privacy';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('api-keys');
-  const { settings, updatePreferences } = useSettingsStore();
+  const { settings, updatePreferences, getActiveApiKey } = useSettingsStore();
+  const [modelOptions, setModelOptions] = useState<string[] | null>(null);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+
+  // Load models for the active OpenAI key
+  useEffect(() => {
+    const active = getActiveApiKey();
+    if (!active || active.provider !== 'openai') {
+      setModelOptions(null);
+      return;
+    }
+    (async () => {
+      try {
+        const { OpenAIService } = await import('../../services/openai');
+        const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Riley');
+        const models = await service.listChatModels();
+        setModelOptions(models);
+        setModelsError(models.length === 0 ? 'No models available for this key.' : null);
+      } catch (err: any) {
+        console.error('Failed to load models', err);
+        setModelsError('Failed to load models');
+        setModelOptions([]);
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const tabs = [
     { id: 'api-keys' as const, label: 'API Keys', icon: Key },
@@ -78,7 +103,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </label>
                 <input
                   type="text"
-                  value={settings?.preferences.aiName || 'Riley'}
+                  value={settings?.preferences.aiName}
                   onChange={(e) => updatePreferences({ aiName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   placeholder="Enter AI name"
@@ -109,15 +134,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   AI Model
                 </label>
-                <select
-                  value={settings?.preferences.aiModel || 'gpt-4'}
-                  onChange={(e) => updatePreferences({ aiModel: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="gpt-4">GPT-4 (Recommended)</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                </select>
+                {modelOptions === null ? (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Add an OpenAI API key to load models.</div>
+                ) : modelOptions.length === 0 ? (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{modelsError || 'No models found.'}</div>
+                ) : (
+                  <select
+                    value={settings?.preferences.aiModel || modelOptions[0]}
+                    onChange={(e) => updatePreferences({ aiModel: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    {modelOptions.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="flex items-center justify-between">

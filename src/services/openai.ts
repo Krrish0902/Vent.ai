@@ -105,6 +105,56 @@ Remember: Help people think clearly, communicate better, and make healthier rela
     return (tokens * (pricing[model] || pricing['gpt-4']));
   }
 
+  /**
+   * Lists available chat-capable models for the current API key.
+   * Filters out embedding, audio, tts/whisper, and moderation models.
+   */
+  async listChatModels(): Promise<string[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/models`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const all: string[] = (data?.data || []).map((m: any) => m?.id).filter(Boolean);
+
+      const excludedKeywords = [
+        'embedding', 'embeddings', 'moderation', 'whisper', 'audio', 'tts', 'speech', 'clip'
+      ];
+
+      const isChatCapable = (id: string) => {
+        const lower = id.toLowerCase();
+        if (excludedKeywords.some(k => lower.includes(k))) return false;
+        // Common chat prefixes (kept broad for forward-compatibility)
+        return lower.startsWith('gpt') || lower.startsWith('o');
+      };
+
+      const chatModels = all.filter(isChatCapable);
+
+      // Prefer newer/better models first using a simple custom order
+      const preferredOrder = ['o4', 'o3', 'gpt-4o', 'gpt-4.1', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5'];
+      chatModels.sort((a, b) => {
+        const ia = preferredOrder.findIndex(p => a.startsWith(p));
+        const ib = preferredOrder.findIndex(p => b.startsWith(p));
+        if (ia === -1 && ib === -1) return a.localeCompare(b);
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+
+      return chatModels;
+    } catch (error) {
+      console.error('Failed to list models:', error);
+      return [];
+    }
+  }
+
   async validateApiKey(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
