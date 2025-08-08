@@ -56,7 +56,7 @@ export const ApiKeySetup: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">API Keys</h3>
         <p className="text-sm text-gray-600">
-          Add your OpenAI API key to enable conversations with Riley. Your keys are encrypted and stored locally.
+          Add your OpenAI API key to enable conversations with Krrish. Your keys are encrypted and stored locally.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ export const ApiKeySetup: React.FC = () => {
         <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
           <Key className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h4 className="text-lg font-medium text-gray-900 mb-2">No API Keys</h4>
-          <p className="text-gray-600 mb-4">Add your OpenAI API key to start chatting with Riley</p>
+          <p className="text-gray-600 mb-4">Add your OpenAI API key to start chatting with Krrish</p>
           <Button onClick={() => setIsAdding(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add API Key
@@ -246,7 +246,7 @@ export const ApiKeySetup: React.FC = () => {
           <li>Copy the key and paste it above</li>
         </ol>
         <p className="text-xs text-blue-700 mt-2">
-          Your API key is encrypted and stored only on your device. Riley never sees or stores your key.
+          Your API key is encrypted and stored only on your device. Krrish never sees or stores your key.
         </p>
       </div>
     </div>

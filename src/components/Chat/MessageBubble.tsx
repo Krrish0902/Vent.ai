@@ -17,7 +17,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [copied, setCopied] = useState(false);
   const { settings } = useSettingsStore();
   const isUser = message.sender === 'user';
-  const aiName = settings?.preferences.aiName || 'Riley';
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);

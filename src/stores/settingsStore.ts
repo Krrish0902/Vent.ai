@@ -25,7 +25,7 @@ const defaultPreferences: UserPreferences = {
   showTypingIndicators: true,
   maxTokensPerMessage: 1000,
   aiModel: 'gpt-4',
-  aiName: 'Riley'
+  aiName: 'Krrish'
 };
 
 const defaultSettings: AppSettings = {

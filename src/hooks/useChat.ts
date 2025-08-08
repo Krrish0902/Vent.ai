@@ -36,15 +36,16 @@ export const useChat = () => {
       const messages = getThreadMessages(currentThreadId);
       
       // Create OpenAI service and send message
-      const aiName = settings?.preferences.aiName || 'Riley';
+      const aiName = settings?.preferences.aiName || 'Krrish';
       const openaiService = new OpenAIService(activeApiKey.key, aiName);
-      const response = await openaiService.sendMessage(messages);
+      const aiModel = settings?.preferences.aiModel || 'gpt-4';
+      const response = await openaiService.sendMessage(messages, aiModel);
 
       // Add AI's response
       await addMessage({
         threadId: currentThreadId,
         content: response.content,
-        sender: 'riley',
+        sender: 'Krrish',
         status: 'delivered',
         tokens: response.tokens
       });

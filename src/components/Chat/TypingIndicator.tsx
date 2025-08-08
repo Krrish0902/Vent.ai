@@ -4,7 +4,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
 
 export const TypingIndicator: React.FC = () => {
   const { settings } = useSettingsStore();
-  const aiName = settings?.preferences.aiName || 'Riley';
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   return (
     <div className="flex items-center space-x-2 p-4 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-sm max-w-xs backdrop-blur-sm border border-white/20 dark:border-gray-700/20">

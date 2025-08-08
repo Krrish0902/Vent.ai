@@ -1,8 +1,8 @@
-# LoveLogic - Your AI Relationship Counselor
+# Vent.ai - Your Friendly AI Third Wheel
 
-A compassionate AI-powered relationship counseling application that provides private, empathetic guidance for all your relationship challenges. Built with React, TypeScript, and modern web technologies.
+A friendly AI companion that listens, validates, and offers gentle perspective when you need it. Like having a supportive friend on speed dial who's great at listening and never judges. Built with React, TypeScript, and modern web technologies.
 
-![LoveLogic](https://img.shields.io/badge/LoveLogic-AI%20Counselor-teal?style=for-the-badge&logo=heart)
+![Vent.ai](https://img.shields.io/badge/Vent.ai-AI%20Counselor-teal?style=for-the-badge&logo=heart)
 ![React](https://img.shields.io/badge/React-18.3.1-blue?style=flat&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue?style=flat&logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.4.2-purple?style=flat&logo=vite)
@@ -10,11 +10,12 @@ A compassionate AI-powered relationship counseling application that provides pri
 
 ## ✨ Features
 
-### 🤖 AI-Powered Counseling
-- **Compassionate AI Counselor**: Personalized AI assistant
-- **Relationship-Focused**: Specialized in relationship advice and communication
-- **Privacy-First**: All conversations stored locally on your device
-- **Multiple AI Models**
+### 🤖 Your AI Friend
+- **Genuine Listener**: A friend who actually listens without judgment
+- **Validation First**: Understands and validates your feelings before anything else
+- **Gentle Perspective**: Offers thoughtful viewpoints only when you want them
+- **Privacy-First**: All conversations stay between just you two
+- **Multiple AI Models**: Choose your preferred conversation style
 
 ### 🎨 Modern Interface
 - **Dark Mode Support**: Beautiful dark theme with actual black backgrounds
@@ -25,7 +26,7 @@ A compassionate AI-powered relationship counseling application that provides pri
 ### 💬 Conversation Management
 - **Thread Organization**: Organize conversations by topics
 - **Search & Filter**: Find past conversations quickly
-- **Message History**: Complete conversation history with timestamps
+- **Message History**: Keep track of your chats like text history with a friend
 - **Export/Import**: Backup and restore your conversations
 
 ### 🔒 Privacy & Security
@@ -35,9 +36,9 @@ A compassionate AI-powered relationship counseling application that provides pri
 - **Complete Control**: Full ownership of your data
 
 ### ⚙️ Customization
-- **Custom AI Name**: Personalize your AI counselor's name
+- **Custom AI Name**: Personalize your AI friend's name
 - **Theme Selection**: Light, dark, or system theme
-- **Preferences**: Customize auto-save, typing indicators, and more
+- **Preferences**: Make it feel like chatting with a real friend
 - **Model Selection**: Choose your preferred AI model
 
 ## 🚀 Quick Start
@@ -51,8 +52,8 @@ A compassionate AI-powered relationship counseling application that provides pri
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/lovelogic.git
-   cd lovelogic
+   git clone https://github.com/yourusername/Vent.ai.git
+   cd Vent.ai
    ```
 
 2. **Install dependencies**
@@ -71,14 +72,14 @@ A compassionate AI-powered relationship counseling application that provides pri
 ### First Time Setup
 
 1. **Add API Key**: Click the settings icon and add your OpenAI API key
-2. **Customize AI Name**: Set your preferred AI counselor name in settings
+2. **Name Your Friend**: Choose what you'd like to call your AI companion
 3. **Choose Theme**: Select light, dark, or system theme
 4. **Start Chatting**: Begin your first conversation!
 
 ## 🏗️ Project Structure
 
 ```
-LoveLogic/
+Vent.ai/
 ├── src/
 │   ├── components/
 │   │   ├── Chat/           # Chat interface components
@@ -110,12 +111,13 @@ LoveLogic/
 
 ## 🎯 Key Features Explained
 
-### AI Counseling System
-LoveLogic uses OpenAI's GPT models to provide relationship counseling. The AI is specifically trained to:
-- Listen empathetically to relationship concerns
-- Provide constructive, non-judgmental advice
-- Focus on healthy communication and mutual understanding
-- Encourage self-reflection and personal growth
+### Your AI Friend's Personality
+Vent.ai uses OpenAI's GPT models to be your supportive friend. Your AI companion is designed to:
+- Listen first, validate always - like a good friend should
+- Share gentle perspective only when it feels right
+- Use casual, relatable language - never clinical or formal
+- Know when to just say "that really sucks" vs offering advice
+- Encourage professional help for serious issues, as any caring friend would
 
 ### Privacy-First Design
 - **Local Storage**: All conversations and settings stored locally using IndexedDB
@@ -134,8 +136,8 @@ LoveLogic uses OpenAI's GPT models to provide relationship counseling. The AI is
 
 ### Starting a Conversation
 1. Click "New Conversation" or select an existing thread
-2. Choose from conversation starters or type your own message
-3. The AI will respond with empathetic, relationship-focused advice
+2. Choose from casual starters like "Need to vent..." or just start typing
+3. Your AI friend will respond with understanding and support
 
 ### Managing Conversations
 - **Search**: Use the search bar to find specific conversations
@@ -144,15 +146,15 @@ LoveLogic uses OpenAI's GPT models to provide relationship counseling. The AI is
 - **Delete**: Permanently delete conversations when needed
 
 ### Customization
-- **AI Name**: Personalize your AI counselor's name in settings
+- **Friend's Name**: Give your AI companion a name that feels right
 - **Theme**: Switch between light, dark, or system themes
-- **Preferences**: Configure auto-save, typing indicators, and more
+- **Chat Style**: Make conversations feel natural and comfortable
 
 ## 🙏 Acknowledgments
 
 - OpenAI for providing the AI models
 - The React and TypeScript communities
-- All contributors and users of LoveLogic
+- All contributors and users of Vent.ai
 
 ## 🆘 Support
 
@@ -163,3 +165,7 @@ LoveLogic uses OpenAI's GPT models to provide relationship counseling. The AI is
 ---
 
 **Made with ❤️ for better relationships** 
+
+---
+
+**Remember**: While Vent.ai is a supportive friend who's great at listening, it's not a replacement for professional help when you need it. Sometimes the kindest thing a friend can do is encourage you to talk to a professional.

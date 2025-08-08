@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Key, Download, Palette, Shield } from 'lucide-react';
+import { X, Key, Download, Palette, Shield, CheckCircle, XCircle, Clock, RefreshCw, Play } from 'lucide-react';
+import { ValidatedModel } from '../../services/openai';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { ApiKeySetup } from './ApiKeySetup';
 import { Button } from '../UI/Button';
@@ -14,32 +15,39 @@ type SettingsTab = 'api-keys' | 'data' | 'preferences' | 'privacy';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('api-keys');
-  const { settings, updatePreferences, getActiveApiKey } = useSettingsStore();
-  const [modelOptions, setModelOptions] = useState<string[] | null>(null);
-  const [modelsError, setModelsError] = useState<string | null>(null);
+  const { settings, updatePreferences, getActiveApiKey, loadSettings } = useSettingsStore();
 
-  // Load models for the active OpenAI key
+  // Load settings when modal opens
   useEffect(() => {
-    const active = getActiveApiKey();
-    if (!active || active.provider !== 'openai') {
-      setModelOptions(null);
-      return;
+    if (isOpen) {
+      loadSettings();
     }
-    (async () => {
-      try {
-        const { OpenAIService } = await import('../../services/openai');
-        const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Riley');
-        const models = await service.listChatModels();
-        setModelOptions(models);
-        setModelsError(models.length === 0 ? 'No models available for this key.' : null);
-      } catch (err: any) {
-        console.error('Failed to load models', err);
-        setModelsError('Failed to load models');
-        setModelOptions([]);
-      }
-    })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, loadSettings]);
+  
+  const [validatedModels, setValidatedModels] = useState<ValidatedModel[] | null>(null);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [isTestingModels, setIsTestingModels] = useState(false);
+
+  const loadValidatedModels = async () => {
+    const active = getActiveApiKey();
+    if (!active || active.provider !== 'openai') return;
+    
+    setIsTestingModels(true);
+    setModelsError(null);
+    try {
+      const { OpenAIService } = await import('../../services/openai');
+      const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Krrish');
+      const models = await service.getValidatedModels();
+      setValidatedModels(models);
+      setModelsError(models.length === 0 ? 'No working models found for this key.' : null);
+    } catch (err: any) {
+      console.error('Failed to validate models', err);
+      setModelsError('Failed to test models: ' + err.message);
+      setValidatedModels([]);
+    } finally {
+      setIsTestingModels(false);
+    }
+  };
 
   const tabs = [
     { id: 'api-keys' as const, label: 'API Keys', icon: Key },
@@ -87,12 +95,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         );
 
       case 'preferences':
+        if (!settings) {
+          return (
+            <div className="space-y-6">
+              <div className="text-center py-8">
+                <div className="text-gray-500 dark:text-gray-400">Loading settings...</div>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Preferences</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Customize your LoveLogic experience.
+                Customize your Vent.ai experience.
               </p>
             </div>
 
@@ -103,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </label>
                 <input
                   type="text"
-                  value={settings?.preferences.aiName}
+                  value={settings?.preferences.aiName || 'Krrish'}
                   onChange={(e) => updatePreferences({ aiName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   placeholder="Enter AI name"
@@ -131,23 +149,132 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  AI Model
-                </label>
-                {modelOptions === null ? (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Add an OpenAI API key to load models.</div>
-                ) : modelOptions.length === 0 ? (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{modelsError || 'No models found.'}</div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    AI Model
+                  </label>
+                  <div className="flex space-x-2">
+                    {!validatedModels && getActiveApiKey()?.provider === 'openai' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={loadValidatedModels}
+                        disabled={isTestingModels}
+                        className="text-xs"
+                      >
+                        <Play className={`w-3 h-3 mr-1 ${isTestingModels ? 'animate-spin' : ''}`} />
+                        Test Models
+                      </Button>
+                    )}
+                    {validatedModels && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={loadValidatedModels}
+                        disabled={isTestingModels}
+                        className="text-xs"
+                      >
+                        <RefreshCw className={`w-3 h-3 mr-1 ${isTestingModels ? 'animate-spin' : ''}`} />
+                        Retest
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {!getActiveApiKey() || getActiveApiKey()?.provider !== 'openai' ? (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Add an OpenAI API key to test models.
+                  </div>
+                ) : validatedModels === null ? (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <div className="text-sm text-blue-700 dark:text-blue-300">
+                      <p className="font-medium mb-1">Model Testing Available</p>
+                      <p>Click "Test Models" to verify which models work with your API key and see their performance.</p>
+                    </div>
+                  </div>
+                ) : isTestingModels ? (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-blue-500 dark:text-blue-400 animate-spin" />
+                      <span className="text-sm text-blue-700 dark:text-blue-300">
+                        Testing models... This may take a moment.
+                      </span>
+                    </div>
+                  </div>
+                ) : validatedModels.length === 0 ? (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                    <div className="text-sm text-red-700 dark:text-red-300">
+                      {modelsError || 'No working models found.'}
+                    </div>
+                  </div>
                 ) : (
-                  <select
-                    value={settings?.preferences.aiModel || modelOptions[0]}
-                    onChange={(e) => updatePreferences({ aiModel: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  >
-                    {modelOptions.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
+                  <div className="space-y-3">
+                    <select
+                      value={settings?.preferences.aiModel || validatedModels.find(m => m.isWorking)?.id || 'gpt-4'}
+                      onChange={(e) => updatePreferences({ aiModel: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    >
+                      {validatedModels.filter(m => m.isWorking).map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.id} {model.responseTime ? `(${model.responseTime}ms)` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {/* Model Status List */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-sm max-h-48 overflow-y-auto">
+                      <div className="font-medium text-gray-700 dark:text-gray-300 mb-2">Model Test Results:</div>
+                      <div className="space-y-2">
+                        {validatedModels.map((model) => (
+                          <div key={model.id} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 flex-1">
+                              {model.isWorking ? (
+                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                              )}
+                              <span className={`text-xs ${model.isWorking ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {model.id}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {model.isWorking 
+                                ? `${model.responseTime}ms`
+                                : model.error?.substring(0, 30) + (model.error && model.error.length > 30 ? '...' : '')
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Selected Model Details */}
+                    {settings?.preferences.aiModel && validatedModels.find(m => m.id === settings.preferences.aiModel) && (
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-sm">
+                        {(() => {
+                          const selectedModel = validatedModels.find(m => m.id === settings.preferences.aiModel);
+                          if (!selectedModel) return null;
+                          
+                          return (
+                            <div className="flex items-start space-x-2">
+                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="text-green-700 dark:text-green-300 font-medium">
+                                  {selectedModel.id} - Working ✓
+                                </div>
+                                <div className="text-green-600 dark:text-green-400 text-xs mt-1">
+                                  Response time: {selectedModel.responseTime}ms
+                                </div>
+                                <div className="text-green-600 dark:text-green-400 text-xs">
+                                  Last tested: {selectedModel.testDate.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -174,7 +301,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     Show typing indicators
                   </label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Display when {settings?.preferences.aiName || 'Riley'} is typing a response
+                    Display when {settings?.preferences.aiName || 'Krrish'} is typing a response
                   </p>
                 </div>
                 <input
@@ -204,7 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
                   <li>• All data stored locally on your device</li>
                   <li>• API keys encrypted with AES-256</li>
-                  <li>• No data sent to LoveLogic servers</li>
+                  <li>• No data sent to Vent.ai servers</li>
                   <li>• No user tracking or analytics</li>
                 </ul>
               </div>
@@ -279,27 +406,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-gray-200 dark:border-gray-700">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`
-                        flex-1 flex items-center justify-center space-x-2 px-4 py-3 text-sm font-medium
-                        transition-colors border-b-2
-                        ${activeTab === tab.id
-                          ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                        }
-                      `}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+                <div className="flex min-w-max">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                          flex items-center justify-center space-x-2 px-6 py-3 text-sm font-medium whitespace-nowrap
+                          transition-colors border-b-2 min-w-fit
+                          ${activeTab === tab.id
+                            ? 'border-teal-500 text-teal-600 dark:text-teal-400'
+                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                          }
+                        `}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Content */}

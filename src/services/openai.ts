@@ -7,47 +7,76 @@ export interface ChatCompletionResponse {
   cost: number;
 }
 
+export interface ModelDetails {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+  permission: {
+    id: string;
+    object: string;
+    created: number;
+    allow_create_engine: boolean;
+    allow_sampling: boolean;
+    allow_logprobs: boolean;
+    allow_search_indices: boolean;
+    allow_view: boolean;
+    allow_fine_tuning: boolean;
+    organization: string;
+    group: string | null;
+    is_blocking: boolean;
+  }[];
+}
+
+export interface ValidatedModel {
+  id: string;
+  name: string;
+  isWorking: boolean;
+  error?: string;
+  testDate: Date;
+  responseTime?: number;
+}
+
 export class OpenAIService {
   private apiKey: string;
   private baseUrl = 'https://api.openai.com/v1';
   private aiName: string;
 
-  constructor(encryptedApiKey: string, aiName: string = 'Riley') {
+  constructor(encryptedApiKey: string, aiName: string = 'Krrish') {
     this.apiKey = decryptData(encryptedApiKey);
     this.aiName = aiName;
   }
 
-  private getRileySystemPrompt(): string {
-    return `You are ${this.aiName}, a compassionate relationship counselor.
+  private getKrrishSystemPrompt(): string {
+    return `You are ${this.aiName}, a trustworthy friend who's always there to listen — the supportive third wheel who genuinely cares and offers perspective without judgment.
 
-CORE PRINCIPLES:
-• Listen first, advise second - always acknowledge feelings
-• Remain neutral and non-judgmental in all situations  
-• Focus on healthy communication and mutual understanding
-• Encourage self-reflection before external action
-• Validate emotions while promoting constructive solutions
+CORE PERSONALITY:
+• Warm, genuine friend who's great at listening
+• Validate feelings first, advice second (and only when it feels right)
+• Casual, conversational language — never clinical or formal
+• Sometimes simply: "that really sucks" or "I totally get why you're upset"
+• Knows when to just listen vs when to offer gentle perspective
 
-RESPONSE STRUCTURE:
-1. **Acknowledge**: Reflect back what you heard with empathy
-2. **Explore**: Ask 1-2 thoughtful questions for deeper understanding  
-3. **Guide**: Offer practical, actionable advice or new perspective
-4. **Encourage**: End with supportive, hopeful words
+RESPONSE APPROACH:
+1. Listen & Validate: e.g., "Ugh, that sounds so frustrating" or "I can totally see why you'd feel that way"
+2. Ask Caring Questions: e.g., "How are you holding up?" "What's been the hardest part?"
+3. Gentle Perspective (only when invited or timing feels right): e.g., "Have you thought about..." or "From an outside perspective..."
+4. Supportive Check-ins: e.g., "How are you feeling about all this?" "What do you need right now?"
 
 CONVERSATION STYLE:
-• Warm but professional tone, like a trusted friend
-• Use phrases: 'I hear that...', 'It sounds like...', 'Help me understand...'
-• Ask open-ended questions: 'How did that make you feel?' 'What would ideal look like?'
-• Keep responses 3-4 paragraphs maximum for readability
-• Use relatable examples or analogies when helpful
-• Never take sides in relationship conflicts
+• Talk like a close friend, not a therapist
+• Use phrases like: "Oh wow", "That's rough", "I hear you", "Been there"
+• Share relatable thoughts: "Relationships are complicated" or "That would drive me crazy too"
+• Know when to just validate without trying to fix anything
+• Ask about feelings naturally: "How did that land with you?" "What's your gut saying?"
 
-BOUNDARIES:
-• If crisis situations (self-harm, abuse) mentioned, immediately suggest professional help
-• Don't provide medical or legal advice - stay in counseling lane
-• Remind users this is supportive guidance, not licensed therapy
-• Encourage professional counseling for complex ongoing issues
+BOUNDARIES AS A FRIEND:
+• If crisis concerns arise, say: "I'm worried about you — maybe talking to someone professional would help?"
+• Do not diagnose or give medical/legal advice — you're a friend, not a doctor
+• Sometimes the best response is just: "I'm here for you" or "That really sucks"
+• Encourage professional help for serious or ongoing issues as a caring friend would
 
-Remember: Help people think clearly, communicate better, and make healthier relationship choices.`;
+Remember: You're the friend who actually listens, validates feelings, and gives thoughtful perspective when asked — not the friend who immediately tries to solve everything or judges their choices.`;
   }
 
   async sendMessage(
@@ -69,7 +98,7 @@ Remember: Help people think clearly, communicate better, and make healthier rela
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: this.getRileySystemPrompt() },
+            { role: 'system', content: this.getKrrishSystemPrompt() },
             ...conversationMessages
           ],
           max_tokens: 1000,
@@ -106,10 +135,111 @@ Remember: Help people think clearly, communicate better, and make healthier rela
   }
 
   /**
-   * Lists available chat-capable models for the current API key.
-   * Filters out embedding, audio, tts/whisper, and moderation models.
+   * Tests if a specific model works with the current API key
    */
-  async listChatModels(): Promise<string[]> {
+  async testModel(modelId: string): Promise<ValidatedModel> {
+    const startTime = Date.now();
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { role: 'user', content: 'Test message - please respond with just "OK"' }
+          ],
+          max_tokens: 5,
+          temperature: 0
+        })
+      });
+
+      const responseTime = Date.now() - startTime;
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        
+        return {
+          id: modelId,
+          name: modelId,
+          isWorking: !!content,
+          testDate: new Date(),
+          responseTime
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          id: modelId,
+          name: modelId,
+          isWorking: false,
+          error: errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`,
+          testDate: new Date(),
+          responseTime
+        };
+      }
+    } catch (error: any) {
+      return {
+        id: modelId,
+        name: modelId,
+        isWorking: false,
+        error: error.message || 'Network error',
+        testDate: new Date(),
+        responseTime: Date.now() - startTime
+      };
+    }
+  }
+
+  /**
+   * Retrieves and validates all available chat models
+   */
+  async getValidatedModels(): Promise<ValidatedModel[]> {
+    try {
+      // Get basic model list first
+      const models = await this.getModelDetails();
+      const chatModels = models.slice(0, 10); // Limit to first 10 to avoid too many API calls
+      
+      console.log(`Testing ${chatModels.length} models...`);
+      
+      // Test each model in parallel (but with some delay to avoid rate limits)
+      const validatedModels: ValidatedModel[] = [];
+      
+      for (let i = 0; i < chatModels.length; i++) {
+        const model = chatModels[i];
+        console.log(`Testing model ${i + 1}/${chatModels.length}: ${model.id}`);
+        
+        const validatedModel = await this.testModel(model.id);
+        validatedModels.push(validatedModel);
+        
+        // Add small delay between requests to avoid rate limiting
+        if (i < chatModels.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      // Sort by working status first, then by response time
+      return validatedModels.sort((a, b) => {
+        if (a.isWorking && !b.isWorking) return -1;
+        if (!a.isWorking && b.isWorking) return 1;
+        if (a.isWorking && b.isWorking) {
+          return (a.responseTime || 0) - (b.responseTime || 0);
+        }
+        return a.id.localeCompare(b.id);
+      });
+    } catch (error) {
+      console.error('Failed to validate models:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Retrieves detailed information about models available to your API key
+   * including permissions and capabilities
+   */
+  async getModelDetails(): Promise<ModelDetails[]> {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
@@ -122,8 +252,9 @@ Remember: Help people think clearly, communicate better, and make healthier rela
       }
 
       const data = await response.json();
-      const all: string[] = (data?.data || []).map((m: any) => m?.id).filter(Boolean);
+      const allModels: ModelDetails[] = data.data || [];
 
+      // Filter to include only chat-capable models
       const excludedKeywords = [
         'embedding', 'embeddings', 'moderation', 'whisper', 'audio', 'tts', 'speech', 'clip'
       ];
@@ -131,24 +262,32 @@ Remember: Help people think clearly, communicate better, and make healthier rela
       const isChatCapable = (id: string) => {
         const lower = id.toLowerCase();
         if (excludedKeywords.some(k => lower.includes(k))) return false;
-        // Common chat prefixes (kept broad for forward-compatibility)
         return lower.startsWith('gpt') || lower.startsWith('o');
       };
 
-      const chatModels = all.filter(isChatCapable);
+      const chatModels = allModels.filter(model => isChatCapable(model.id));
 
-      // Prefer newer/better models first using a simple custom order
-      const preferredOrder = ['o4', 'o3', 'gpt-4o', 'gpt-4.1', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5'];
-      chatModels.sort((a, b) => {
-        const ia = preferredOrder.findIndex(p => a.startsWith(p));
-        const ib = preferredOrder.findIndex(p => b.startsWith(p));
-        if (ia === -1 && ib === -1) return a.localeCompare(b);
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
+      // Sort by creation date (newest first) and then by ID
+      return chatModels.sort((a, b) => {
+        if (b.created !== a.created) {
+          return b.created - a.created;
+        }
+        return a.id.localeCompare(b.id);
       });
+    } catch (error) {
+      console.error('Failed to retrieve model details:', error);
+      return [];
+    }
+  }
 
-      return chatModels;
+  /**
+   * Lists available chat-capable models for the current API key.
+   * Filters out embedding, audio, tts/whisper, and moderation models.
+   */
+  async listChatModels(): Promise<string[]> {
+    try {
+      const models = await this.getModelDetails();
+      return models.map(m => m.id);
     } catch (error) {
       console.error('Failed to list models:', error);
       return [];

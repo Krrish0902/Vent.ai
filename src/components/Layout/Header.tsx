@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   sidebarCollapsed = false
 }) => {
   const { settings } = useSettingsStore();
-  const aiName = settings?.preferences.aiName || 'Riley';
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   return (
     <motion.header
@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Heart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">LoveLogic</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Vent.ai</h1>
               <p className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Your Relationship Counselor</p>
             </div>
           </div>

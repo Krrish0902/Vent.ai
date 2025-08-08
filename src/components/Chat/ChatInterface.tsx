@@ -18,7 +18,7 @@ export const ChatInterface: React.FC = () => {
   const { sendMessage, isLoading } = useChat();
 
   const messages = currentThreadId ? getThreadMessages(currentThreadId) : [];
-  const aiName = settings?.preferences.aiName || 'Riley';
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   useEffect(() => {
     if (currentThreadId) {

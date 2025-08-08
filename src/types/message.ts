@@ -2,7 +2,7 @@ export interface Message {
   id: string;
   threadId: string;
   content: string;
-  sender: 'user' | 'riley';
+  sender: 'user' | 'Krrish';
   timestamp: Date;
   status: MessageStatus;
   tokens?: number;

@@ -33,7 +33,7 @@ export const MainLayout: React.FC = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full mb-4">
               <Heart className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to LoveLogic</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Vent.ai</h1>
             <p className="text-gray-600 dark:text-gray-300 text-lg">
               Your compassionate AI relationship counselor. Let's get you set up.
             </p>

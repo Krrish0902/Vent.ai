@@ -11,38 +11,45 @@ interface ConversationStartersProps {
 const starters: ConversationStarter[] = [
   {
     id: '1',
-    title: 'Communication Issues',
-    description: 'We struggle to understand each other',
-    category: 'communication',
-    prompt: "My partner and I have been having trouble communicating lately. We seem to misunderstand each other frequently and our conversations often turn into arguments. I want to improve how we talk to each other."
+    title: 'Just Venting',
+    description: 'I need to get something off my chest',
+    category: 'general',
+    prompt: 'I need to vent about something...'
   },
   {
     id: '2',
-    title: 'Trust and Honesty',
-    description: 'Building trust in our relationship',
-    category: 'trust',
-    prompt: "I'm dealing with trust issues in my relationship. Something happened that shook my confidence, and I'm not sure how to rebuild that foundation of trust with my partner."
+    title: 'Relationship Drama',
+    description: "This situation is driving me crazy",
+    category: 'conflict',
+    prompt: 'My relationship is driving me crazy'
   },
   {
     id: '3',
-    title: 'Intimacy Concerns',
-    description: 'Reconnecting emotionally and physically',
-    category: 'intimacy',
-    prompt: "My partner and I have been growing apart lately. We don't feel as close as we used to, both emotionally and physically. I want to work on rebuilding our intimacy."
+    title: 'Reality Check',
+    description: "Am I overreacting or is this fair?",
+    category: 'communication',
+    prompt: "I don't know if I'm overreacting, but..."
   },
   {
     id: '4',
-    title: 'Conflict Resolution',
-    description: 'Learning to fight fair and resolve disagreements',
-    category: 'conflict',
-    prompt: "We love each other, but we fight a lot about small things. Our arguments seem to escalate quickly and we both say things we regret. How can we handle conflicts better?"
+    title: 'Need Perspective',
+    description: 'Looking for a gentle outside viewpoint',
+    category: 'general',
+    prompt: 'Can I get your take on this situation?'
   },
   {
     id: '5',
-    title: 'General Relationship',
-    description: 'Overall relationship health and happiness',
+    title: 'Reality Check 2',
+    description: 'Honest thoughts, kindly delivered',
     category: 'general',
-    prompt: "I want to talk about my relationship in general. Things aren't terrible, but I feel like we could be happier and more connected. I'm looking for guidance on how to strengthen our bond."
+    prompt: 'I need a reality check about something'
+  },
+  {
+    id: '6',
+    title: 'Frustration',
+    description: 'Someone is being really frustrating',
+    category: 'conflict',
+    prompt: 'This person is being so frustrating...'
   }
 ];
 
@@ -56,7 +63,7 @@ const categoryIcons = {
 
 export const ConversationStarters: React.FC<ConversationStartersProps> = ({ onSelectStarter }) => {
   const { settings } = useSettingsStore();
-  const aiName = settings?.preferences.aiName || 'Riley';
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -83,7 +90,7 @@ export const ConversationStarters: React.FC<ConversationStartersProps> = ({ onSe
           transition={{ delay: 0.1 }}
           className="text-gray-600 dark:text-gray-300 text-lg"
         >
-          Your compassionate relationship counselor. I'm here to help you navigate relationship challenges with empathy and understanding.
+          Your friendly third wheel — I listen first, validate always, and share gentle perspective when you want it.
         </motion.p>
       </div>
 

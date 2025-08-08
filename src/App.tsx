@@ -33,7 +33,7 @@ function App() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full mb-4 animate-pulse">
             <Heart className="w-8 h-8 text-white" />
           </div>
-          <div className="text-gray-600 dark:text-gray-300">Loading LoveLogic...</div>
+          <div className="text-gray-600 dark:text-gray-300">Loading Vent.ai...</div>
         </div>
       </div>
     );

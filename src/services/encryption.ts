@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js';
 
-const ENCRYPTION_KEY = 'riley-app-secure-key-v1';
+const ENCRYPTION_KEY = 'Krrish-app-secure-key-v1';
 
 export const encryptData = (data: string): string => {
   return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
