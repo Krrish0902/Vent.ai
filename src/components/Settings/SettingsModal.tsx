@@ -10,14 +10,12 @@ import { Button } from '../UI/Button';
 import type { ConversationMode } from '../../types/message';
 import { OpenAIService, ValidatedModel } from '../../services/openai';
 
-interface SettingsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface SettingsModalProps {}
 
 type SettingsTab = 'api-keys' | 'data' | 'preferences' | 'privacy';
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = () => {
+  const { isSettingsOpen, closeSettings } = useSettingsStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('api-keys');
   const { settings, updatePreferences, getActiveApiKey } = useSettingsStore();
   const [validatedModels, setValidatedModels] = useState<ValidatedModel[] | null>(null);
@@ -145,7 +143,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             ) : (
               <div className="space-y-3">
                 <select
-                  value={settings?.preferences.aiModel || validatedModels.find(m => m.isWorking)?.id || 'gpt-4'}
+                  value={settings?.preferences.aiModel || validatedModels.find(m => m.isWorking)?.id}
                   onChange={(e) => updatePreferences({ aiModel: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
@@ -402,14 +400,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isSettingsOpen && (
         <>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 z-50"
-            onClick={onClose}
+            onClick={closeSettings}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -418,16 +416,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             className="fixed inset-4 z-50 overflow-hidden"
           >
             <div className="h-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col">
-              {/* Header */}
+            {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h2>
-                <button
-                  onClick={onClose}
+              <button
+                  onClick={closeSettings}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                >
+              >
                   <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
+              </button>
+            </div>
 
               {/* Tabs */}
               <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700">

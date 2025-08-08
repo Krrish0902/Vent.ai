@@ -6,8 +6,11 @@ import { encryptData, generateSecureId } from '../services/encryption';
 interface SettingsStore {
   settings: AppSettings | null;
   isLoading: boolean;
+  isSettingsOpen: boolean;
   
   // Actions
+  openSettings: () => void;
+  closeSettings: () => void;
   loadSettings: () => Promise<void>;
   addApiKey: (provider: 'openai' | 'anthropic', name: string, key: string) => Promise<void>;
   updateApiKey: (id: string, updates: Partial<ApiKeyConfig>) => Promise<void>;
@@ -24,8 +27,10 @@ const defaultPreferences: UserPreferences = {
   compactMode: false,
   showTypingIndicators: true,
   maxTokensPerMessage: 1000,
-  aiModel: 'gpt-4',
-  aiName: 'Krrish'
+  aiModel: "",
+  aiName: 'Krrish',
+  showEmojiReactions: true,
+  defaultConversationMode: 'general'
 };
 
 const defaultSettings: AppSettings = {
@@ -41,19 +46,23 @@ const defaultSettings: AppSettings = {
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: null,
   isLoading: false,
+  isSettingsOpen: false,
+
+  openSettings: () => set({ isSettingsOpen: true }),
+  closeSettings: () => set({ isSettingsOpen: false }),
 
   loadSettings: async () => {
     set({ isLoading: true });
     try {
-      let settings = await db.settings.get('main');
+      let settings = await db.settings.get('main') as AppSettings;
       if (!settings) {
-        settings = { ...defaultSettings, id: 'main' };
-        await db.settings.add(settings);
+        settings = defaultSettings;
+        await db.settings.add({ ...settings, id: 'main' });
       }
       set({ settings, isLoading: false });
     } catch (error) {
       console.error('Error loading settings:', error);
-      set({ settings: { ...defaultSettings, id: 'main' }, isLoading: false });
+      set({ settings: defaultSettings, isLoading: false });
     }
   },
 

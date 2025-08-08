@@ -2,7 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Heart, Menu, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '../UI/Button';
-import { useSettingsStore } from '../../stores/settingsStore';
+
+
+
+
 
 interface HeaderProps {
   onSettingsClick: () => void;
@@ -12,6 +15,16 @@ interface HeaderProps {
   sidebarCollapsed?: boolean;
 }
 
+// Add this function inside the Header component
+const handleLogoClick = () => {
+  // First scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Then reload the page after a short delay to allow smooth scroll to complete
+  setTimeout(() => {
+    window.location.reload();
+  }, 300);
+};
+
 export const Header: React.FC<HeaderProps> = ({ 
   onSettingsClick, 
   onMenuClick, 
@@ -19,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
   showMenuButton = false,
   sidebarCollapsed = false
 }) => {
-  const { settings } = useSettingsStore();
-  const aiName = settings?.preferences.aiName || 'Krrish';
+
+
 
   return (
     <motion.header
@@ -59,13 +72,16 @@ export const Header: React.FC<HeaderProps> = ({
             </Button>
           )}
           
-          <div className="flex items-center space-x-2">
+          <div 
+            onClick={handleLogoClick}
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <div className="p-2 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">Vent.ai</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Your Relationship Counselor</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Your Friendly AI Third Wheel</p>
             </div>
           </div>
         </div>

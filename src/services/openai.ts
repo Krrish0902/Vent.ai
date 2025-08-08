@@ -152,7 +152,7 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
 
   async sendMessage(
     messages: Message[], 
-    model: string = 'gpt-4',
+    model: string,
     mode: ConversationMode = 'general'
   ): Promise<ChatCompletionResponse> {
     try {

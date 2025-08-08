@@ -28,6 +28,7 @@ export interface UserPreferences {
 }
 
 export interface AppSettings {
+  id?: string;
   apiKeys: ApiKeyConfig[];
   preferences: UserPreferences;
   privacy: {

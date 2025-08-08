@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircleHeart } from 'lucide-react';
+import { MessageCircleHeart, Settings } from 'lucide-react';
 import { useMessageStore } from '../../stores/messageStore';
 import { useThreadStore } from '../../stores/threadStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -15,7 +15,7 @@ export const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentThreadId } = useThreadStore();
   const { getThreadMessages, typingStatus, loadMessages } = useMessageStore();
-  const { settings } = useSettingsStore();
+  const { settings, openSettings } = useSettingsStore();
   const { sendMessage, isLoading } = useChat();
   const [currentMode, setCurrentMode] = useState<ConversationMode>(
     settings?.preferences.defaultConversationMode || 'general'
@@ -23,6 +23,8 @@ export const ChatInterface: React.FC = () => {
 
   const messages = currentThreadId ? getThreadMessages(currentThreadId) : [];
   const aiName = settings?.preferences.aiName || 'Krrish';
+  const activeApiKey = useSettingsStore(state => state.getActiveApiKey());
+  const aiModel = settings?.preferences?.aiModel || "";
 
   useEffect(() => {
     if (currentThreadId) {
@@ -53,11 +55,9 @@ export const ChatInterface: React.FC = () => {
             Start a conversation with {aiName}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Choose a topic below or type your message. {aiName} is here to listen and chat.
+            Your pocket-sized best friend for all things relationships. Whether you need to vent, get a reality check, or just process your feelings - {aiName} is here with zero judgment and endless patience.
           </p>
-          <div className="max-w-xl mx-auto text-sm text-gray-500 dark:text-gray-400">
-            Tip: Press Enter to send, Shift + Enter for a new line
-          </div>
+          
         </motion.div>
       </div>
     );
@@ -65,6 +65,41 @@ export const ChatInterface: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-black dark:to-gray-900">
+      {/* Model Warning */}
+      {(!aiModel || !activeApiKey) && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-700"
+        >
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700 dark:text-yellow-200">
+                  {!activeApiKey 
+                    ? "No API key set. Please add your OpenAI API key in settings to start chatting."
+                    : "No AI model selected. Please set up your preferred model in settings to start chatting."
+                  }
+                </p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={openSettings}
+                  className="inline-flex items-center px-3 py-1.5 border border-yellow-400 dark:border-yellow-600 rounded-md text-yellow-700 dark:text-yellow-200 text-sm font-medium hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                >
+                  <Settings className="w-4 h-4 mr-1.5" />
+                  Open Settings
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
         {messages.length === 0 ? (

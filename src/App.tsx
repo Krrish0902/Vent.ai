@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { MainLayout } from './components/Layout/MainLayout';
+import { SettingsModal } from './components/Settings/SettingsModal';
 import { useSettingsStore } from './stores/settingsStore';
 import { Heart } from 'lucide-react';
 
@@ -42,6 +43,7 @@ function App() {
   return (
     <BrowserRouter>
       <MainLayout />
+      <SettingsModal />
     </BrowserRouter>
   );
 }

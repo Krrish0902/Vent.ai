@@ -5,11 +5,11 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { Header } from './Header';
 import { ThreadList } from '../Sidebar/ThreadList';
 import { ChatInterface } from '../Chat/ChatInterface';
-import { SettingsModal } from '../Settings/SettingsModal';
+
 import { ApiKeySetup } from '../Settings/ApiKeySetup';
 
 export const MainLayout: React.FC = () => {
-  const [showSettings, setShowSettings] = useState(false);
+  const { openSettings } = useSettingsStore();
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { settings, loadSettings } = useSettingsStore();
@@ -48,7 +48,7 @@ export const MainLayout: React.FC = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-black dark:to-gray-900 flex flex-col overflow-hidden">
       <Header
-        onSettingsClick={() => setShowSettings(true)}
+        onSettingsClick={openSettings}
         onMenuClick={() => setShowSidebar(true)}
         showMenuButton={true}
       />
@@ -113,11 +113,7 @@ export const MainLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
+      {/* Settings Modal is now rendered in App.tsx */}
     </div>
   );
 };
