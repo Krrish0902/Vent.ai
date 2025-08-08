@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { Thread } from '../types/thread';
 import { db } from '../services/database';
 import { generateSecureId } from '../services/encryption';
+import { format } from 'date-fns';
+import type { ConversationMode } from '../types/message';
 
 interface ThreadStore {
   threads: Thread[];
@@ -11,7 +13,7 @@ interface ThreadStore {
   
   // Actions
   loadThreads: () => Promise<void>;
-  createThread: (title?: string) => Promise<string>;
+  createThread: (mode?: ConversationMode) => Promise<string>;
   updateThread: (id: string, updates: Partial<Thread>) => Promise<void>;
   deleteThread: (id: string) => Promise<void>;
   setCurrentThread: (id: string | null) => void;
@@ -36,16 +38,21 @@ export const useThreadStore = create<ThreadStore>((set, get) => ({
     }
   },
 
-  createThread: async (title = 'New Conversation') => {
+  createThread: async (mode: ConversationMode = 'general') => {
+    const now = new Date();
+    const formattedDate = format(now, 'dd MMM HH:mm');
+    const title = `${mode.charAt(0).toUpperCase() + mode.slice(1)} ${formattedDate}`;
+
     const newThread: Thread = {
       id: generateSecureId(),
       title,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
       messageCount: 0,
       totalTokens: 0,
       isArchived: false,
-      isPinned: false
+      isPinned: false,
+      mode
     };
 
     await db.threads.add(newThread);

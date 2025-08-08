@@ -7,4 +7,20 @@ export default defineConfig({
   optimizeDeps: {
     include: ['lucide-react'],
   },
+  build: {
+    // Generate source maps for production build
+    sourcemap: true,
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'encryption': ['crypto-js'],
+          'ui-libs': ['framer-motion', 'lucide-react'],
+          'database': ['dexie'],
+        },
+      },
+    },
+  },
 });

@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useThreadStore } from '../../stores/threadStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { ThreadItem } from './ThreadItem';
 import { Button } from '../UI/Button';
 import { Plus, Search, X } from 'lucide-react';
+import type { ConversationMode } from '../../types/message';
 
 interface ThreadListProps {
   isCollapsed?: boolean;
@@ -28,6 +30,8 @@ export const ThreadList: React.FC<ThreadListProps> = ({
     getFilteredThreads
   } = useThreadStore();
 
+  const { settings } = useSettingsStore();
+  const defaultMode = settings?.preferences.defaultConversationMode || 'general';
   const filteredThreads = getFilteredThreads();
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
 
   const handleNewThread = async () => {
     try {
-      const threadId = await createThread();
+      const threadId = await createThread(defaultMode);
       setCurrentThread(threadId);
       onClose?.(); // Close mobile sidebar after creating thread
     } catch (error) {
@@ -80,9 +84,6 @@ export const ThreadList: React.FC<ThreadListProps> = ({
             <Plus className="w-4 h-4" />
           </Button>
         </div>
-
-        {/* Collapsed Thread List */}
-        
       </div>
     );
   }
