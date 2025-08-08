@@ -38,8 +38,9 @@ export const useChat = () => {
       
       // Create OpenAI service and send message
       const aiName = settings?.preferences.aiName || 'Krrish';
-      const openaiService = new OpenAIService(activeApiKey.key, aiName, true); // Mark key as encrypted
-      const aiModel = settings?.preferences.aiModel ;
+      const userName = settings?.preferences.userName || '';
+      const openaiService = new OpenAIService(activeApiKey.key, aiName, userName, true); // Mark key as encrypted
+      const aiModel = settings?.preferences.aiModel || '';
       const response = await openaiService.sendMessage(messages, aiModel, mode);
 
       // Add AI's response with emoji reaction if present

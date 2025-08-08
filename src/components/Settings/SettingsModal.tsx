@@ -12,7 +12,7 @@ import { OpenAIService, ValidatedModel } from '../../services/openai';
 
 interface SettingsModalProps {}
 
-type SettingsTab = 'api-keys' | 'data' | 'preferences' | 'privacy';
+type SettingsTab = 'preferences' | 'api-keys' | 'data' | 'privacy';
 
 export const SettingsModal: React.FC<SettingsModalProps> = () => {
   const { isSettingsOpen, closeSettings } = useSettingsStore();
@@ -63,6 +63,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
         </div>
 
         <div className="space-y-4">
+          {/* User Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Your Name
+            </label>
+            <input
+              type="text"
+              value={settings?.preferences.userName || ''}
+              onChange={(e) => updatePreferences({ userName: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              placeholder="Enter your name"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              This helps {settings?.preferences.aiName || 'Krrish'} personalize conversations with you
+            </p>
+          </div>
+
           {/* AI Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -70,7 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
             </label>
             <input
               type="text"
-              value={settings?.preferences.aiName || 'Krrish'}
+              value={settings?.preferences.aiName}
               onChange={(e) => updatePreferences({ aiName: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               placeholder="Enter AI name"
@@ -431,9 +448,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
               <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700">
                 <div className="flex min-w-max">
                   {[
+                    { id: 'preferences' as const, label: 'Preferences', icon: Palette },
                     { id: 'api-keys' as const, label: 'API Keys', icon: Key },
                     { id: 'data' as const, label: 'Data', icon: Download },
-                    { id: 'preferences' as const, label: 'Preferences', icon: Palette },
                     { id: 'privacy' as const, label: 'Privacy', icon: Shield }
                   ].map((tab) => {
                     const Icon = tab.icon;

@@ -64,6 +64,7 @@ const categoryIcons = {
 export const ConversationStarters: React.FC<ConversationStartersProps> = ({ onSelectStarter }) => {
   const { settings } = useSettingsStore();
   const aiName = settings?.preferences.aiName || 'Krrish';
+  const userName = settings?.preferences.userName || '';
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -81,7 +82,7 @@ export const ConversationStarters: React.FC<ConversationStartersProps> = ({ onSe
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-bold text-gray-900 dark:text-white mb-2"
         >
-          Hi, I'm {aiName}
+          {userName ? `Hi ${userName}, I'm ${aiName}` : `Hi, I'm ${aiName}`}
         </motion.h1>
         
         <motion.p
@@ -90,7 +91,10 @@ export const ConversationStarters: React.FC<ConversationStartersProps> = ({ onSe
           transition={{ delay: 0.1 }}
           className="text-gray-600 dark:text-gray-300 text-lg"
         >
-          Your friendly third wheel — I listen first, validate always, and share gentle perspective when you want it.
+          {userName 
+            ? `Your friendly third wheel — I'm here to listen, validate, and share gentle perspective when you want it.`
+            : `Your friendly third wheel — I listen first, validate always, and share gentle perspective when you want it.`
+          }
         </motion.p>
       </div>
 

@@ -23,9 +23,10 @@ export const ChatInterface: React.FC = () => {
 
   const messages = currentThreadId ? getThreadMessages(currentThreadId) : [];
   const aiName = settings?.preferences.aiName || 'Krrish';
+  const userName = settings?.preferences.userName || '';
   const activeApiKey = useSettingsStore(state => state.getActiveApiKey());
   const aiModel = settings?.preferences?.aiModel || "";
-
+  
   useEffect(() => {
     if (currentThreadId) {
       loadMessages(currentThreadId);
@@ -52,13 +53,48 @@ export const ChatInterface: React.FC = () => {
             <MessageCircleHeart className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-            Start a conversation with {aiName}
+            {userName ? `Hey ${userName}! Ready to chat with ${aiName}?` : `Start a conversation with ${aiName}`}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Your pocket-sized best friend for all things relationships. Whether you need to vent, get a reality check, or just process your feelings - {aiName} is here with zero judgment and endless patience.
+            {userName 
+              ? `${aiName} is here to listen, support, and chat with you about anything on your mind. Whether you need to vent, get a reality check, or just process your feelings - ${aiName} is here with zero judgment and endless patience.`
+              : `Your pocket-sized best friend for all things relationships. Whether you need to vent, get a reality check, or just process your feelings - ${aiName} is here with zero judgment and endless patience.`
+            }
           </p>
           
-        </motion.div>
+          {/* User Name Suggestion Card */}
+          {(!userName || !aiModel) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-8 p-6 bg-gradient-to-br from-indigo-50 via-green-50 to-yellow-50 dark:from-indigo-900/20 dark:via-green-900/20 dark:to-yellow-900/20 rounded-2xl border border-teal-200/50 dark:border-teal-700/50 shadow-lg backdrop-blur-sm"
+            >
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <div className="w-12 h-12 bg-blue-500 rounded- flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+                    Make it personal
+                  </h3>
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                    Complete your profile to have a personalized experience with {aiName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={openSettings}
+                className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-green-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-indigo-50 dark:focus:ring-offset-gray-900"
+              >
+                <Settings className="w-4 h-4 mr-2 inline" />
+                  Settings
+              </button>
+            </motion.div>
+          )}
+        </motion.div> 
       </div>
     );
   }

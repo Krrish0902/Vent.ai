@@ -2,10 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Heart, Menu, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '../UI/Button';
-
-
-
-
+import { useThreadStore } from '../../stores/threadStore';
 
 interface HeaderProps {
   onSettingsClick: () => void;
@@ -15,16 +12,6 @@ interface HeaderProps {
   sidebarCollapsed?: boolean;
 }
 
-// Add this function inside the Header component
-const handleLogoClick = () => {
-  // First scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Then reload the page after a short delay to allow smooth scroll to complete
-  setTimeout(() => {
-    window.location.reload();
-  }, 300);
-};
-
 export const Header: React.FC<HeaderProps> = ({ 
   onSettingsClick, 
   onMenuClick, 
@@ -32,8 +19,11 @@ export const Header: React.FC<HeaderProps> = ({
   showMenuButton = false,
   sidebarCollapsed = false
 }) => {
+  const { setCurrentThread } = useThreadStore();
 
-
+  const handleLogoClick = () => {
+    setCurrentThread(null);
+  };
 
   return (
     <motion.header

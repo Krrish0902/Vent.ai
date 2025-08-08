@@ -23,6 +23,7 @@ export interface UserPreferences {
   maxTokensPerMessage: number;
   aiModel: string;
   aiName: string; // Custom AI name preference
+  userName: string; // User's name for personalization
   showEmojiReactions: boolean; // Toggle emoji reactions
   defaultConversationMode: 'venting' | 'perspective' | 'general'; // Default conversation mode
 }

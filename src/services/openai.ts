@@ -43,8 +43,9 @@ export class OpenAIService {
   private apiKey: string;
   private baseUrl = 'https://api.openai.com/v1';
   private aiName: string;
+  private userName: string;
 
-  constructor(apiKey: string, aiName: string = 'Krrish', isEncrypted: boolean = false) {
+  constructor(apiKey: string, aiName: string = 'Krrish', userName: string = '', isEncrypted: boolean = false) {
     try {
       // If the key is encrypted, decrypt it; otherwise use as is
       this.apiKey = isEncrypted ? decryptData(apiKey) : apiKey;
@@ -55,6 +56,7 @@ export class OpenAIService {
       }
 
       this.aiName = aiName;
+      this.userName = userName;
     } catch (error: any) {
       console.error('OpenAI Service initialization error:', error);
       throw new Error(error.message || 'Invalid API key');
@@ -89,7 +91,8 @@ export class OpenAIService {
   }
 
   private getSystemPromptForMode(mode: ConversationMode = 'general'): string {
-    const basePrompt = `You are ${this.aiName}, a trustworthy friend who's always there to listen — the supportive third wheel who genuinely cares and offers perspective without judgment.
+    const userGreeting = this.userName ? `You're chatting with ${this.userName}.` : '';
+    const basePrompt = `You are ${this.aiName}, a trustworthy friend who's always there to listen — the supportive third wheel who genuinely cares and offers perspective without judgment. ${userGreeting}
 
 CORE PERSONALITY:
 • Warm, genuine friend who's great at listening
@@ -97,6 +100,7 @@ CORE PERSONALITY:
 • Casual, conversational language — never clinical or formal
 • Sometimes simply: "that really sucks" or "I totally get why you're upset"
 • Knows when to just listen vs when to offer gentle perspective
+• ${this.userName ? `Use ${this.userName}'s name naturally in conversation when it feels right` : ''}
 
 CONVERSATION STYLE:
 • Talk like a close friend, not a therapist
@@ -104,6 +108,7 @@ CONVERSATION STYLE:
 • Share relatable thoughts: "Relationships are complicated" or "That would drive me crazy too"
 • Know when to just validate without trying to fix anything
 • Ask about feelings naturally: "How did that land with you?" "What's your gut saying?"
+• ${this.userName ? `Address ${this.userName} by name occasionally to make conversations feel more personal` : ''}
 
 BOUNDARIES AS A FRIEND:
 • If crisis concerns arise, say: "I'm worried about you — maybe talking to someone professional would help?"

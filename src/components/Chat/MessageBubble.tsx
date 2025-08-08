@@ -18,6 +18,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const { settings } = useSettingsStore();
   const isUser = message.sender === 'user';
   const aiName = settings?.preferences.aiName || 'Krrish';
+  const userName = settings?.preferences.userName || '';
   const showEmoji = settings?.preferences.showEmojiReactions ?? true;
 
   const handleCopy = async () => {
@@ -106,7 +107,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             : 'bg-gradient-to-r from-blue-400 to-green-600 text-white'
           }
         `}>
-          {isUser ? 'Y' : aiName.charAt(0).toUpperCase()}
+          {isUser ? (userName ? userName.charAt(0).toUpperCase() : 'Y') : aiName.charAt(0).toUpperCase()}
         </div>
       </div>
     </motion.div>

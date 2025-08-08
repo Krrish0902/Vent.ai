@@ -29,6 +29,7 @@ const defaultPreferences: UserPreferences = {
   maxTokensPerMessage: 1000,
   aiModel: "",
   aiName: 'Krrish',
+  userName: '',
   showEmojiReactions: true,
   defaultConversationMode: 'general'
 };
