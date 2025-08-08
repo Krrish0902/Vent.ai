@@ -8,9 +8,12 @@ export interface Message {
   tokens?: number;
   isEdited?: boolean;
   editedAt?: Date;
+  reaction?: string; // Emoji reaction from AI
 }
 
 export type MessageStatus = 'sending' | 'sent' | 'failed' | 'delivered';
+
+export type ConversationMode = 'venting' | 'perspective' | 'general';
 
 export interface TypingStatus {
   isTyping: boolean;

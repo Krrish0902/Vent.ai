@@ -18,6 +18,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const { settings } = useSettingsStore();
   const isUser = message.sender === 'user';
   const aiName = settings?.preferences.aiName || 'Krrish';
+  const showEmoji = settings?.preferences.showEmojiReactions ?? true;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -27,11 +28,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 200, damping: 20 }}
       className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
     >
       <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
+        {/* Emoji Reaction */}
+        {!isUser && showEmoji && message.reaction && (
+          <motion.div
+            initial={{ scale: 0, y: 10 }}
+            animate={{ scale: 1, y: 0 }}
+            className="text-2xl mb-1 ml-1"
+          >
+            {message.reaction}
+          </motion.div>
+        )}
+
         <div
           className={`
             group relative px-4 py-3 rounded-2xl shadow-sm
@@ -85,12 +98,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       </div>
 
       {/* Avatar */}
-      <div className={`${isUser ? 'order-1 mr-3' : 'order-2 ml-3'} flex-shrink-0`}>
+      <div className={`${isUser ? 'order-1 mr-3' : 'order-2 ml-3 mt-9'} flex-shrink-0`}>
         <div className={`
           w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
           ${isUser 
-            ? 'bg-gradient-to-r from-teal-400 to-cyan-500 text-white' 
-            : 'bg-gradient-to-r from-purple-400 to-purple-600 text-white'
+            ? 'bg-gradient-to-r from-green-400 to-yellow-500 text-white' 
+            : 'bg-gradient-to-r from-blue-400 to-green-600 text-white'
           }
         `}>
           {isUser ? 'Y' : aiName.charAt(0).toUpperCase()}

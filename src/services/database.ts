@@ -10,7 +10,7 @@ export class RileyDatabase extends Dexie {
   drafts!: Table<MessageDraft>;
 
   constructor() {
-    super('LoveLogicDatabase');
+    super('VentDB');
     
     this.version(1).stores({
       threads: 'id, title, createdAt, updatedAt, isArchived, isPinned',

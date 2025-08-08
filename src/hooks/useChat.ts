@@ -3,14 +3,15 @@ import { useMessageStore } from '../stores/messageStore';
 import { useThreadStore } from '../stores/threadStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { OpenAIService } from '../services/openai';
+import type { ConversationMode } from '../types/message';
 
 export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { addMessage, updateMessageStatus, setTyping, getThreadMessages } = useMessageStore();
+  const { addMessage, setTyping, getThreadMessages } = useMessageStore();
   const { currentThreadId, updateThread } = useThreadStore();
   const { getActiveApiKey, settings } = useSettingsStore();
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, mode: ConversationMode = 'general') => {
     if (!currentThreadId || !content.trim()) return;
 
     const activeApiKey = getActiveApiKey();
@@ -22,7 +23,7 @@ export const useChat = () => {
     
     try {
       // Add user message
-      const userMessageId = await addMessage({
+      await addMessage({
         threadId: currentThreadId,
         content: content.trim(),
         sender: 'user',
@@ -37,28 +38,30 @@ export const useChat = () => {
       
       // Create OpenAI service and send message
       const aiName = settings?.preferences.aiName || 'Krrish';
-      const openaiService = new OpenAIService(activeApiKey.key, aiName);
+      const openaiService = new OpenAIService(activeApiKey.key, aiName, true); // Mark key as encrypted
       const aiModel = settings?.preferences.aiModel || 'gpt-4';
-      const response = await openaiService.sendMessage(messages, aiModel);
+      const response = await openaiService.sendMessage(messages, aiModel, mode);
 
-      // Add AI's response
+      // Add AI's response with emoji reaction if present
       await addMessage({
         threadId: currentThreadId,
         content: response.content,
         sender: 'Krrish',
         status: 'delivered',
-        tokens: response.tokens
+        tokens: response.tokens,
+        reaction: response.reaction
       });
 
       // Update thread metadata
       await updateThread(currentThreadId, {
         messageCount: messages.length + 2,
         totalTokens: (messages.reduce((sum, msg) => sum + (msg.tokens || 0), 0)) + response.tokens,
-        lastMessagePreview: response.content.substring(0, 100)
+        lastMessagePreview: response.content.substring(0, 100),
+        mode
       });
 
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Failed to send message:', error);
       throw error;
     } finally {
       setIsLoading(false);

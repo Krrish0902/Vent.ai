@@ -1,10 +1,12 @@
 import { decryptData } from './encryption';
 import { Message } from '../types/message';
+import type { ConversationMode } from '../types/message';
 
 export interface ChatCompletionResponse {
   content: string;
   tokens: number;
   cost: number;
+  reaction?: string;
 }
 
 export interface ModelDetails {
@@ -42,13 +44,52 @@ export class OpenAIService {
   private baseUrl = 'https://api.openai.com/v1';
   private aiName: string;
 
-  constructor(encryptedApiKey: string, aiName: string = 'Krrish') {
-    this.apiKey = decryptData(encryptedApiKey);
-    this.aiName = aiName;
+  constructor(apiKey: string, aiName: string = 'Krrish', isEncrypted: boolean = false) {
+    try {
+      // If the key is encrypted, decrypt it; otherwise use as is
+      this.apiKey = isEncrypted ? decryptData(apiKey) : apiKey;
+      
+      // Basic validation
+      if (!this.apiKey || typeof this.apiKey !== 'string' || !this.apiKey.startsWith('sk-')) {
+        throw new Error('Invalid API key format. Key should start with "sk-"');
+      }
+
+      this.aiName = aiName;
+    } catch (error: any) {
+      console.error('OpenAI Service initialization error:', error);
+      throw new Error(error.message || 'Invalid API key');
+    }
   }
 
-  private getKrrishSystemPrompt(): string {
-    return `You are ${this.aiName}, a trustworthy friend who's always there to listen — the supportive third wheel who genuinely cares and offers perspective without judgment.
+  private async makeApiRequest<T>(
+    endpoint: string,
+    method: 'GET' | 'POST' = 'GET',
+    body?: any
+  ): Promise<T> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        ...(body ? { body: JSON.stringify(body) } : {})
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error(`OpenAI API Error (${endpoint}):`, error);
+      throw error;
+    }
+  }
+
+  private getSystemPromptForMode(mode: ConversationMode = 'general'): string {
+    const basePrompt = `You are ${this.aiName}, a trustworthy friend who's always there to listen — the supportive third wheel who genuinely cares and offers perspective without judgment.
 
 CORE PERSONALITY:
 • Warm, genuine friend who's great at listening
@@ -56,12 +97,6 @@ CORE PERSONALITY:
 • Casual, conversational language — never clinical or formal
 • Sometimes simply: "that really sucks" or "I totally get why you're upset"
 • Knows when to just listen vs when to offer gentle perspective
-
-RESPONSE APPROACH:
-1. Listen & Validate: e.g., "Ugh, that sounds so frustrating" or "I can totally see why you'd feel that way"
-2. Ask Caring Questions: e.g., "How are you holding up?" "What's been the hardest part?"
-3. Gentle Perspective (only when invited or timing feels right): e.g., "Have you thought about..." or "From an outside perspective..."
-4. Supportive Check-ins: e.g., "How are you feeling about all this?" "What do you need right now?"
 
 CONVERSATION STYLE:
 • Talk like a close friend, not a therapist
@@ -74,14 +109,51 @@ BOUNDARIES AS A FRIEND:
 • If crisis concerns arise, say: "I'm worried about you — maybe talking to someone professional would help?"
 • Do not diagnose or give medical/legal advice — you're a friend, not a doctor
 • Sometimes the best response is just: "I'm here for you" or "That really sucks"
-• Encourage professional help for serious or ongoing issues as a caring friend would
+• Encourage professional help for serious or ongoing issues as a caring friend would`;
 
-Remember: You're the friend who actually listens, validates feelings, and gives thoughtful perspective when asked — not the friend who immediately tries to solve everything or judges their choices.`;
+    const modeSpecificPrompts = {
+      venting: `
+CURRENT MODE: JUST VENTING
+• Focus entirely on listening and validating feelings
+• Do NOT offer advice or solutions unless explicitly asked
+• Use more emotional validation phrases: "That's so hard", "I hear you", "You have every right to feel that way"
+• React with supportive emojis more frequently (❤️, 🫂, 💔, 😔)
+• If they seem to want advice, gently ask "Would you like my perspective on this, or do you just need to vent?"`,
+
+      perspective: `
+CURRENT MODE: NEED PERSPECTIVE
+• Start with brief validation, then thoughtfully share your perspective
+• Frame advice as gentle suggestions: "Have you considered...", "From what you're saying..."
+• Use more analytical emojis when appropriate (🤔, 💭, 💡)
+• Balance validation with constructive viewpoints
+• Always check if your perspective resonates: "Does that make sense?"`,
+
+      general: `
+CURRENT MODE: GENERAL CHAT
+• Balance between listening and offering perspective
+• Read the situation to determine when to validate vs when to advise
+• Use a mix of supportive and thoughtful reactions
+• Be ready to switch between venting and perspective modes based on their needs`
+    };
+
+    return `${basePrompt}\n${modeSpecificPrompts[mode]}
+
+EMOJI REACTIONS:
+• For strong emotions: ❤️ (love/support), 🫂 (hugs), 💔 (heartbreak), 😔 (sadness)
+• For achievements/progress: 🎉 (celebration), ⭐ (proud), 💪 (strength)
+• For insights: 💡 (realization), 🤔 (thoughtful), 💭 (contemplation)
+• For agreement: 👍 (approval), 💯 (totally agree), 🎯 (exactly right)
+
+Remember: You're the friend who actually listens, validates feelings, and gives thoughtful perspective when asked — not the friend who immediately tries to solve everything or judges their choices.
+
+RESPONSE FORMAT:
+When appropriate, start your response with an emoji reaction enclosed in [REACT:emoji]. Example: [REACT:❤️] That sounds really tough...`;
   }
 
   async sendMessage(
     messages: Message[], 
-    model: string = 'gpt-4'
+    model: string = 'gpt-4',
+    mode: ConversationMode = 'general'
   ): Promise<ChatCompletionResponse> {
     try {
       const conversationMessages = messages.map(msg => ({
@@ -89,37 +161,30 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
         content: msg.content
       }));
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: this.getKrrishSystemPrompt() },
-            ...conversationMessages
-          ],
-          max_tokens: 1000,
-          temperature: 0.7,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1
-        })
+      const data = await this.makeApiRequest<any>('/chat/completions', 'POST', {
+        model,
+        messages: [
+          { role: 'system', content: this.getSystemPromptForMode(mode) },
+          ...conversationMessages
+        ],
+        max_tokens: 1000,
+        temperature: mode === 'perspective' ? 0.7 : 0.8,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1
       });
 
-      if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
       const content = data.choices[0]?.message?.content || '';
       const tokens = data.usage?.total_tokens || 0;
       const cost = this.calculateCost(tokens, model);
 
-      return { content, tokens, cost };
+      // Extract emoji reaction if present
+      const reactionMatch = content.match(/^\[REACT:([^\]]+)\]/);
+      const reaction = reactionMatch ? reactionMatch[1] : undefined;
+      const cleanContent = reactionMatch ? content.replace(/^\[REACT:[^\]]+\]\s*/, '') : content;
+
+      return { content: cleanContent, tokens, cost, reaction };
     } catch (error) {
-      console.error('OpenAI API Error:', error);
+      console.error('Failed to send message:', error);
       throw error;
     }
   }
@@ -134,53 +199,26 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
     return (tokens * (pricing[model] || pricing['gpt-4']));
   }
 
-  /**
-   * Tests if a specific model works with the current API key
-   */
   async testModel(modelId: string): Promise<ValidatedModel> {
     const startTime = Date.now();
     
     try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify({
-          model: modelId,
-          messages: [
-            { role: 'user', content: 'Test message - please respond with just "OK"' }
-          ],
-          max_tokens: 5,
-          temperature: 0
-        })
+      await this.makeApiRequest<any>('/chat/completions', 'POST', {
+        model: modelId,
+        messages: [
+          { role: 'user', content: 'Test message - please respond with just "OK"' }
+        ],
+        max_tokens: 5,
+        temperature: 0
       });
 
-      const responseTime = Date.now() - startTime;
-
-      if (response.ok) {
-        const data = await response.json();
-        const content = data.choices[0]?.message?.content;
-        
-        return {
-          id: modelId,
-          name: modelId,
-          isWorking: !!content,
-          testDate: new Date(),
-          responseTime
-        };
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        return {
-          id: modelId,
-          name: modelId,
-          isWorking: false,
-          error: errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`,
-          testDate: new Date(),
-          responseTime
-        };
-      }
+      return {
+        id: modelId,
+        name: modelId,
+        isWorking: true,
+        testDate: new Date(),
+        responseTime: Date.now() - startTime
+      };
     } catch (error: any) {
       return {
         id: modelId,
@@ -193,18 +231,13 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
     }
   }
 
-  /**
-   * Retrieves and validates all available chat models
-   */
   async getValidatedModels(): Promise<ValidatedModel[]> {
     try {
-      // Get basic model list first
       const models = await this.getModelDetails();
-      const chatModels = models.slice(0, 10); // Limit to first 10 to avoid too many API calls
+      const chatModels = models.slice(0, 10);
       
       console.log(`Testing ${chatModels.length} models...`);
       
-      // Test each model in parallel (but with some delay to avoid rate limits)
       const validatedModels: ValidatedModel[] = [];
       
       for (let i = 0; i < chatModels.length; i++) {
@@ -214,13 +247,11 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
         const validatedModel = await this.testModel(model.id);
         validatedModels.push(validatedModel);
         
-        // Add small delay between requests to avoid rate limiting
         if (i < chatModels.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
-      // Sort by working status first, then by response time
       return validatedModels.sort((a, b) => {
         if (a.isWorking && !b.isWorking) return -1;
         if (!a.isWorking && b.isWorking) return 1;
@@ -235,26 +266,11 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
     }
   }
 
-  /**
-   * Retrieves detailed information about models available to your API key
-   * including permissions and capabilities
-   */
   async getModelDetails(): Promise<ModelDetails[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/models`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      });
+      const data = await this.makeApiRequest<{ data: ModelDetails[] }>('/models');
+      const allModels = data.data || [];
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const allModels: ModelDetails[] = data.data || [];
-
-      // Filter to include only chat-capable models
       const excludedKeywords = [
         'embedding', 'embeddings', 'moderation', 'whisper', 'audio', 'tts', 'speech', 'clip'
       ];
@@ -267,7 +283,6 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
 
       const chatModels = allModels.filter(model => isChatCapable(model.id));
 
-      // Sort by creation date (newest first) and then by ID
       return chatModels.sort((a, b) => {
         if (b.created !== a.created) {
           return b.created - a.created;
@@ -280,10 +295,6 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
     }
   }
 
-  /**
-   * Lists available chat-capable models for the current API key.
-   * Filters out embedding, audio, tts/whisper, and moderation models.
-   */
   async listChatModels(): Promise<string[]> {
     try {
       const models = await this.getModelDetails();
@@ -296,13 +307,10 @@ Remember: You're the friend who actually listens, validates feelings, and gives 
 
   async validateApiKey(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/models`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      });
-      return response.ok;
-    } catch {
+      await this.makeApiRequest<any>('/models');
+      return true;
+    } catch (error: any) {
+      console.error('API key validation error:', error);
       return false;
     }
   }

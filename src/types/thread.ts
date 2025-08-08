@@ -9,6 +9,7 @@ export interface Thread {
   isPinned: boolean;
   lastMessagePreview?: string;
   conversationSummary?: string;
+  mode?: 'venting' | 'perspective' | 'general'; // Added conversation mode
 }
 
 export interface ThreadMetadata {
@@ -18,6 +19,7 @@ export interface ThreadMetadata {
   messageCount: number;
   totalTokens: number;
   emotionalTone?: 'positive' | 'neutral' | 'concerned' | 'supportive';
+  mode?: 'venting' | 'perspective' | 'general'; // Added conversation mode
 }
 
 export interface ConversationStarter {
@@ -26,4 +28,5 @@ export interface ConversationStarter {
   description: string;
   category: 'communication' | 'conflict' | 'intimacy' | 'trust' | 'general';
   prompt: string;
+  suggestedMode?: 'venting' | 'perspective' | 'general'; // Added suggested mode
 }

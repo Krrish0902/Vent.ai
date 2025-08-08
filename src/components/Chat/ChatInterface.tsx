@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircleHeart } from 'lucide-react';
 import { useMessageStore } from '../../stores/messageStore';
@@ -9,6 +9,7 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
 import { ConversationStarters } from './ConversationStarters';
+import type { ConversationMode } from '../../types/message';
 
 export const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -16,6 +17,9 @@ export const ChatInterface: React.FC = () => {
   const { getThreadMessages, typingStatus, loadMessages } = useMessageStore();
   const { settings } = useSettingsStore();
   const { sendMessage, isLoading } = useChat();
+  const [currentMode, setCurrentMode] = useState<ConversationMode>(
+    settings?.preferences.defaultConversationMode || 'general'
+  );
 
   const messages = currentThreadId ? getThreadMessages(currentThreadId) : [];
   const aiName = settings?.preferences.aiName || 'Krrish';
@@ -31,7 +35,7 @@ export const ChatInterface: React.FC = () => {
   }, [messages, typingStatus.isTyping]);
 
   const handleSendMessage = async (content: string) => {
-    await sendMessage(content);
+    await sendMessage(content, currentMode);
   };
 
   if (!currentThreadId) {
@@ -49,7 +53,7 @@ export const ChatInterface: React.FC = () => {
             Start a conversation with {aiName}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Choose a topic below or type your message. {aiName} is here to help with thoughtful, empathetic guidance.
+            Choose a topic below or type your message. {aiName} is here to listen and chat.
           </p>
           <div className="max-w-xl mx-auto text-sm text-gray-500 dark:text-gray-400">
             Tip: Press Enter to send, Shift + Enter for a new line
@@ -104,6 +108,15 @@ export const ChatInterface: React.FC = () => {
           <MessageInput
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
+            currentMode={currentMode}
+            onModeChange={setCurrentMode}
+            placeholder={
+              currentMode === 'venting' 
+                ? "I'm here to listen..." 
+                : currentMode === 'perspective'
+                ? "What's on your mind? I'll share my thoughts..."
+                : "What would you like to talk about?"
+            }
           />
         </div>
       </div>
