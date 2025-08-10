@@ -29,7 +29,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
     setIsTestingModels(true);
     setModelsError(null);
     try {
-      const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Krrish', true);
+      const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Krrish', settings?.preferences.userName || '', true);
       const models = await service.getValidatedModels();
       setValidatedModels(models);
       setModelsError(models.length === 0 ? 'No working models found for this key.' : null);
