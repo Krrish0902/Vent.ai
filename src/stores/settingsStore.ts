@@ -12,7 +12,7 @@ interface SettingsStore {
   openSettings: () => void;
   closeSettings: () => void;
   loadSettings: () => Promise<void>;
-  addApiKey: (provider: 'openai' | 'anthropic', name: string, key: string) => Promise<void>;
+  addApiKey: (provider: 'gemini', name: string, key: string) => Promise<void>;
   updateApiKey: (id: string, updates: Partial<ApiKeyConfig>) => Promise<void>;
   deleteApiKey: (id: string) => Promise<void>;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;

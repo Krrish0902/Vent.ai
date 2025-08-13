@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Key, Trash2, Plus } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { Button } from '../UI/Button';
-import { OpenAIService } from '../../services/openai';
+import { GeminiService } from '../../services/gemini';
 
 export const ApiKeySetup: React.FC = () => {
   const { settings, addApiKey, deleteApiKey, updateApiKey } = useSettingsStore();
   const [isAdding, setIsAdding] = useState(false);
-  const [newKey, setNewKey] = useState({ provider: 'openai' as const, name: '', key: '' });
+  const [newKey, setNewKey] = useState({ provider: 'gemini' as const, name: '', key: '' });
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -20,7 +20,8 @@ export const ApiKeySetup: React.FC = () => {
     setValidationError(null);
     try {
       // Validate the API key without encrypting it first
-      const service = new OpenAIService(newKey.key);
+      const service = new GeminiService(newKey.key);
+      
       const isValid = await service.validateApiKey();
       
       if (!isValid) {
@@ -29,7 +30,7 @@ export const ApiKeySetup: React.FC = () => {
       }
 
       await addApiKey(newKey.provider, newKey.name, newKey.key);
-      setNewKey({ provider: 'openai', name: '', key: '' });
+      setNewKey({ provider: 'gemini', name: '', key: '' });
       setIsAdding(false);
     } catch (error: any) {
       console.error('Error validating API key:', error);
@@ -57,7 +58,7 @@ export const ApiKeySetup: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">API Keys</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          Add your OpenAI API key to enable conversations. Your keys are encrypted and stored locally.
+          Add your Google Gemini API key to enable conversations. Your keys are encrypted and stored locally.
         </p>
       </div>
 
@@ -66,7 +67,7 @@ export const ApiKeySetup: React.FC = () => {
         <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
           <Key className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No API Keys</h4>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">Add your OpenAI API key to start chatting</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">Add your Google Gemini API key to start chatting</p>
           <Button onClick={() => setIsAdding(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add API Key
@@ -177,16 +178,9 @@ export const ApiKeySetup: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Provider
               </label>
-              <select
-                value={newKey.provider}
-                onChange={(e) => setNewKey(prev => ({ 
-                  ...prev, 
-                  provider: e.target.value as 'openai' 
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              >
-                <option value="openai">OpenAI</option>
-              </select>
+              <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                Google Gemini
+              </div>
             </div>
 
             <div>
@@ -197,7 +191,7 @@ export const ApiKeySetup: React.FC = () => {
                 type="text"
                 value={newKey.name}
                 onChange={(e) => setNewKey(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="My OpenAI Key"
+                placeholder="My Gemini Key"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
@@ -210,7 +204,7 @@ export const ApiKeySetup: React.FC = () => {
                 type="password"
                 value={newKey.key}
                 onChange={(e) => setNewKey(prev => ({ ...prev, key: e.target.value }))}
-                placeholder="sk-..."
+                placeholder={newKey.provider === 'gemini' ? 'Enter Gemini API key' : 'sk-...'}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono"
               />
             </div>
@@ -227,7 +221,7 @@ export const ApiKeySetup: React.FC = () => {
               variant="ghost"
               onClick={() => {
                 setIsAdding(false);
-                setNewKey({ provider: 'openai', name: '', key: '' });
+                setNewKey({ provider: 'gemini', name: '', key: '' });
                 setValidationError(null);
               }}
             >
@@ -246,10 +240,10 @@ export const ApiKeySetup: React.FC = () => {
 
       {/* Instructions */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How to get your OpenAI API key:</h4>
+        <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How to get your Gemini API key:</h4>
         <ol className="text-sm text-blue-800 dark:text-blue-200 list-decimal list-inside space-y-1">
-          <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com/api-keys</a></li>
-          <li>Sign in to your OpenAI account</li>
+          <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">platform.Gemini.com/api-keys</a></li>
+          <li>Sign in to your Gemini account</li>
           <li>Click "Create new secret key"</li>
           <li>Copy the key and paste it above</li>
         </ol>

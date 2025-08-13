@@ -9,26 +9,7 @@ export interface ChatCompletionResponse {
   reaction?: string;
 }
 
-export interface ModelDetails {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  permission: {
-    id: string;
-    object: string;
-    created: number;
-    allow_create_engine: boolean;
-    allow_sampling: boolean;
-    allow_logprobs: boolean;
-    allow_search_indices: boolean;
-    allow_view: boolean;
-    allow_fine_tuning: boolean;
-    organization: string;
-    group: string | null;
-    is_blocking: boolean;
-  }[];
-}
+
 
 export interface ValidatedModel {
   id: string;
@@ -39,9 +20,9 @@ export interface ValidatedModel {
   responseTime?: number;
 }
 
-export class OpenAIService {
+export class GeminiService {
   private apiKey: string;
-  private baseUrl = 'https://api.openai.com/v1';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   private aiName: string;
   private userName: string;
 
@@ -50,15 +31,15 @@ export class OpenAIService {
       // If the key is encrypted, decrypt it; otherwise use as is
       this.apiKey = isEncrypted ? decryptData(apiKey) : apiKey;
       
-      // Basic validation
-      if (!this.apiKey || typeof this.apiKey !== 'string' || !this.apiKey.startsWith('sk-')) {
-        throw new Error('Invalid API key format. Key should start with "sk-"');
+      // Basic validation for Gemini API key format
+      if (!this.apiKey || typeof this.apiKey !== 'string' || this.apiKey.length < 20) {
+        throw new Error('Invalid API key format. Gemini API key should be a valid string.');
       }
 
       this.aiName = aiName;
       this.userName = userName;
     } catch (error: any) {
-      console.error('OpenAI Service initialization error:', error);
+      console.error('Gemini Service initialization error:', error);
       throw new Error(error.message || 'Invalid API key');
     }
   }
@@ -69,23 +50,33 @@ export class OpenAIService {
     body?: any
   ): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}?key=${this.apiKey}`;
+      console.log(`🌐 Making ${method} request to: ${endpoint}`);
+      
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
         },
         ...(body ? { body: JSON.stringify(body) } : {})
       });
 
+      console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ API Error Response:', errorData);
         throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`✅ API Response received for ${endpoint}`);
+      return data;
     } catch (error: any) {
-      console.error(`OpenAI API Error (${endpoint}):`, error);
+      console.error(`Gemini API Error (${endpoint}):`, error);
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error(`Network error: Unable to connect to Gemini API. Please check your internet connection and API key.`);
+      }
       throw error;
     }
   }
@@ -137,7 +128,6 @@ CURRENT MODE: NEED PERSPECTIVE
 CURRENT MODE: GENERAL CHAT
 • Balance between listening and offering perspective
 • Read the situation to determine when to validate vs when to advise
-• Use a mix of supportive and thoughtful reactions
 • Be ready to switch between venting and perspective modes based on their needs`
     };
 
@@ -161,25 +151,30 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
     mode: ConversationMode = 'general'
   ): Promise<ChatCompletionResponse> {
     try {
-      const conversationMessages = messages.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.content
+      // Convert messages to Gemini format
+      const geminiMessages = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
       }));
 
-      const data = await this.makeApiRequest<any>('/chat/completions', 'POST', {
-        model,
-        messages: [
-          { role: 'system', content: this.getSystemPromptForMode(mode) },
-          ...conversationMessages
+      // Extract the actual model name (remove 'models/' prefix if present)
+      const actualModelName = model.replace('models/', '');
+      
+      const data = await this.makeApiRequest<any>('/models/' + actualModelName + ':generateContent', 'POST', {
+        contents: [
+          { role: 'user', parts: [{ text: this.getSystemPromptForMode(mode) }] },
+          ...geminiMessages
         ],
-        max_tokens: 1000,
-        temperature: mode === 'perspective' ? 0.7 : 0.8,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1
+        generationConfig: {
+          maxOutputTokens: 1000,
+          temperature: mode === 'perspective' ? 0.7 : 0.8,
+          topP: 0.9,
+          topK: 40
+        }
       });
 
-      const content = data.choices[0]?.message?.content || '';
-      const tokens = data.usage?.total_tokens || 0;
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const tokens = data.usageMetadata?.totalTokenCount || 0;
       const cost = this.calculateCost(tokens, model);
 
       // Extract emoji reaction if present
@@ -195,74 +190,129 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
   }
 
   private calculateCost(tokens: number, model: string): number {
+    // Extract the actual model name (remove 'models/' prefix if present)
+    const actualModelName = model.replace('models/', '');
+    
+    // Gemini pricing (as of 2024)
     const pricing: Record<string, number> = {
-      'gpt-4': 0.00003,
-      'gpt-4-turbo': 0.00001,
-      'gpt-3.5-turbo': 0.0000015
+      'gemini-1.5-flash': 0.000075, // $0.075 per 1M input tokens
+      'gemini-1.5-pro': 0.000375,   // $0.375 per 1M input tokens
+      'gemini-2.0-flash': 0.000075, // $0.075 per 1M input tokens
+      'gemini-2.0-pro': 0.000375,   // $0.375 per 1M input tokens
+      'gemini-2.5-flash': 0.000075, // $0.075 per 1M input tokens
+      'gemini-2.5-pro': 0.000375    // $0.375 per 1M input tokens
     };
     
-    return (tokens * (pricing[model] || pricing['gpt-4']));
+    return (tokens / 1000000) * (pricing[actualModelName] || pricing['gemini-1.5-flash']);
   }
 
   async testModel(modelId: string): Promise<ValidatedModel> {
     const startTime = Date.now();
     
     try {
-      await this.makeApiRequest<any>('/chat/completions', 'POST', {
-        model: modelId,
-        messages: [
-          { role: 'user', content: 'Test message - please respond with just "OK"' }
+      console.log(`🧪 Testing ${modelId}...`);
+      
+      // Extract the actual model name (remove 'models/' prefix)
+      const actualModelName = modelId.replace('models/', '');
+      
+      // First check if the model exists and is accessible
+      try {
+        await this.makeApiRequest<any>(`/models/${actualModelName}`);
+      } catch (error: any) {
+        console.log(`⚠️ Model ${actualModelName} not accessible:`, error.message);
+        return {
+          id: modelId,
+          name: modelId,
+          isWorking: false,
+          error: `Model not accessible: ${error.message}`,
+          testDate: new Date(),
+          responseTime: Date.now() - startTime
+        };
+      }
+      
+      const response = await this.makeApiRequest<any>('/models/' + actualModelName + ':generateContent', 'POST', {
+        contents: [
+          { role: 'user', parts: [{ text: 'Test message - please respond with just "OK"' }] }
         ],
-        max_tokens: 5,
-        temperature: 0
+        generationConfig: {
+          maxOutputTokens: 5,
+          temperature: 0
+        }
       });
 
+      const responseTime = Date.now() - startTime;
+      console.log(`✅ ${modelId} test successful (${responseTime}ms)`);
+      
       return {
         id: modelId,
         name: modelId,
         isWorking: true,
         testDate: new Date(),
-        responseTime: Date.now() - startTime
+        responseTime
       };
     } catch (error: any) {
+      const responseTime = Date.now() - startTime;
+      const errorMessage = error.message || 'Unknown error';
+      
+      console.log(`❌ ${modelId} test failed (${responseTime}ms): ${errorMessage}`);
+      
       return {
         id: modelId,
         name: modelId,
         isWorking: false,
-        error: error.message || 'Network error',
+        error: errorMessage,
         testDate: new Date(),
-        responseTime: Date.now() - startTime
+        responseTime
       };
     }
   }
 
   async getValidatedModels(): Promise<ValidatedModel[]> {
     try {
-      const models = await this.getModelDetails();
-      const chatModels = models.slice(0, 10);
+      // Only test the 4 specific models we support
+      const supportedModels = [
+        'models/gemini-2.5-pro',
+        'models/gemini-2.5-flash',
+        'models/gemini-1.5-pro',
+        'models/gemini-1.5-flash'
+      ];
       
-      console.log(`Testing ${chatModels.length} models...`);
+      console.log(`Testing ${supportedModels.length} supported models...`);
       
       const validatedModels: ValidatedModel[] = [];
       
-      for (let i = 0; i < chatModels.length; i++) {
-        const model = chatModels[i];
-        console.log(`Testing model ${i + 1}/${chatModels.length}: ${model.id}`);
+      for (let i = 0; i < supportedModels.length; i++) {
+        const modelId = supportedModels[i];
+        console.log(`Testing model ${i + 1}/${supportedModels.length}: ${modelId}`);
         
-        const validatedModel = await this.testModel(model.id);
-        validatedModels.push(validatedModel);
-        
-        if (i < chatModels.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+          const validatedModel = await this.testModel(modelId);
+          validatedModels.push(validatedModel);
+          
+          if (validatedModel.isWorking) {
+            console.log(`✅ ${modelId} is working!`);
+          }
+          
+          // Short delay between tests to avoid rate limiting
+          if (i < supportedModels.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          console.warn(`Failed to test ${modelId}:`, error);
+          validatedModels.push({
+            id: modelId,
+            name: modelId,
+            isWorking: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            testDate: new Date()
+          });
         }
       }
       
+      // Sort: working models first, then alphabetically
       return validatedModels.sort((a, b) => {
         if (a.isWorking && !b.isWorking) return -1;
         if (!a.isWorking && b.isWorking) return 1;
-        if (a.isWorking && b.isWorking) {
-          return (a.responseTime || 0) - (b.responseTime || 0);
-        }
         return a.id.localeCompare(b.id);
       });
     } catch (error) {
@@ -271,39 +321,17 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
     }
   }
 
-  async getModelDetails(): Promise<ModelDetails[]> {
-    try {
-      const data = await this.makeApiRequest<{ data: ModelDetails[] }>('/models');
-      const allModels = data.data || [];
 
-      const excludedKeywords = [
-        'embedding', 'embeddings', 'moderation', 'whisper', 'audio', 'tts', 'speech', 'clip'
-      ];
-
-      const isChatCapable = (id: string) => {
-        const lower = id.toLowerCase();
-        if (excludedKeywords.some(k => lower.includes(k))) return false;
-        return lower.startsWith('gpt') || lower.startsWith('o');
-      };
-
-      const chatModels = allModels.filter(model => isChatCapable(model.id));
-
-      return chatModels.sort((a, b) => {
-        if (b.created !== a.created) {
-          return b.created - a.created;
-        }
-        return a.id.localeCompare(b.id);
-      });
-    } catch (error) {
-      console.error('Failed to retrieve model details:', error);
-      return [];
-    }
-  }
 
   async listChatModels(): Promise<string[]> {
     try {
-      const models = await this.getModelDetails();
-      return models.map(m => m.id);
+      // Return only the 4 supported models
+      return [
+        'models/gemini-2.5-pro',
+        'models/gemini-2.5-flash',
+        'models/gemini-1.5-pro',
+        'models/gemini-1.5-flash'
+      ];
     } catch (error) {
       console.error('Failed to list models:', error);
       return [];
@@ -312,7 +340,8 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
 
   async validateApiKey(): Promise<boolean> {
     try {
-      await this.makeApiRequest<any>('/models');
+      // Test with a simple request to validate the API key
+      await this.makeApiRequest<any>('/models/gemini-1.5-flash');
       return true;
     } catch (error: any) {
       console.error('API key validation error:', error);

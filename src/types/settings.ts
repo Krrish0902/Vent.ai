@@ -1,6 +1,6 @@
 export interface ApiKeyConfig {
   id: string;
-  provider: 'openai' | 'anthropic';
+  provider: 'gemini';
   name: string;
   key: string; // encrypted
   isActive: boolean;

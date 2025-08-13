@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMessageStore } from '../stores/messageStore';
 import { useThreadStore } from '../stores/threadStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { OpenAIService } from '../services/openai';
+import { GeminiService } from '../services/gemini';
 import type { ConversationMode } from '../types/message';
 
 export const useChat = () => {
@@ -36,12 +36,13 @@ export const useChat = () => {
       // Get conversation history
       const messages = getThreadMessages(currentThreadId);
       
-      // Create OpenAI service and send message
+      // Create Gemini service
       const aiName = settings?.preferences.aiName || 'Krrish';
       const userName = settings?.preferences.userName || '';
-      const openaiService = new OpenAIService(activeApiKey.key, aiName, userName, true); // Mark key as encrypted
       const aiModel = settings?.preferences.aiModel || '';
-      const response = await openaiService.sendMessage(messages, aiModel, mode);
+      
+      const geminiService = new GeminiService(activeApiKey.key, aiName, userName, true);
+      const response = await geminiService.sendMessage(messages, aiModel, mode);
 
       // Add AI's response with emoji reaction if present
       await addMessage({

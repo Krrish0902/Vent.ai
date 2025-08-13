@@ -8,7 +8,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { ApiKeySetup } from './ApiKeySetup';
 import { Button } from '../UI/Button';
 import type { ConversationMode } from '../../types/message';
-import { OpenAIService, ValidatedModel } from '../../services/openai';
+import { GeminiService, ValidatedModel } from '../../services/gemini';
 
 interface SettingsModalProps {}
 
@@ -24,12 +24,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
 
   const loadValidatedModels = async () => {
     const active = getActiveApiKey();
-    if (!active || active.provider !== 'openai') return;
+    if (!active || active.provider !== 'gemini') return;
     
     setIsTestingModels(true);
     setModelsError(null);
     try {
-      const service = new OpenAIService(active.key, settings?.preferences.aiName || 'Krrish', settings?.preferences.userName || '', true);
+      const service = new GeminiService(active.key, settings?.preferences.aiName || 'Krrish', settings?.preferences.userName || '', true);
+      
       const models = await service.getValidatedModels();
       setValidatedModels(models);
       setModelsError(models.length === 0 ? 'No working models found for this key.' : null);
@@ -104,7 +105,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
                 AI Model
               </label>
               <div className="flex space-x-2">
-                {!validatedModels && getActiveApiKey()?.provider === 'openai' && (
+                {!validatedModels && getActiveApiKey()?.provider === 'gemini' && (
                   <Button
                     variant="secondary"
                     size="sm"
@@ -131,9 +132,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = () => {
               </div>
             </div>
             
-            {!getActiveApiKey() || getActiveApiKey()?.provider !== 'openai' ? (
+            {!getActiveApiKey() || getActiveApiKey()?.provider !== 'gemini' ? (
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Add an OpenAI API key to test models.
+                Add an Gemini API key to test models.
               </div>
             ) : validatedModels === null ? (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">

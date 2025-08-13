@@ -46,7 +46,7 @@ A friendly AI companion that listens, validates, and offers gentle perspective w
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
-- OpenAI API key
+- Google Gemini API key
 
 ### Installation
 
@@ -71,7 +71,7 @@ A friendly AI companion that listens, validates, and offers gentle perspective w
 
 ### First Time Setup
 
-1. **Add API Key**: Click the settings icon and add your OpenAI API key
+1. **Add API Key**: Click the settings icon and add your Google Gemini API key
 2. **Name Your Friend**: Choose what you'd like to call your AI companion
 3. **Choose Theme**: Select light, dark, or system theme
 4. **Start Chatting**: Begin your first conversation!
@@ -112,7 +112,7 @@ Vent.ai/
 ## 🎯 Key Features Explained
 
 ### Your AI Friend's Personality
-Vent.ai uses OpenAI's GPT models to be your supportive friend. Your AI companion is designed to:
+Vent.ai uses Google's Gemini models to be your supportive friend. Your AI companion is designed to:
 - Listen first, validate always - like a good friend should
 - Share gentle perspective only when it feels right
 - Use casual, relatable language - never clinical or formal
@@ -128,9 +128,13 @@ Vent.ai uses OpenAI's GPT models to be your supportive friend. Your AI companion
 ## 🔧 Configuration
 
 ### API Configuration
-1. Get your OpenAI API key from [OpenAI Platform](https://platform.openai.com/)
+1. Get your Google Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Add the key in the app settings
-3. Choose your preferred AI model (GPT-4 recommended)
+3. Choose your preferred AI model from our supported models:
+   - Gemini 2.5 Pro (recommended)
+   - Gemini 2.5 Flash
+   - Gemini 1.5 Pro
+   - Gemini 1.5 Flash
 
 ## 📱 Usage
 
@@ -152,7 +156,7 @@ Vent.ai uses OpenAI's GPT models to be your supportive friend. Your AI companion
 
 ## 🙏 Acknowledgments
 
-- OpenAI for providing the AI models
+- Google for providing the Gemini AI models
 - The React and TypeScript communities
 - All contributors and users of Vent.ai
 

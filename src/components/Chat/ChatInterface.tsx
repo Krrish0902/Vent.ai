@@ -118,7 +118,7 @@ export const ChatInterface: React.FC = () => {
               <div className="ml-3">
                 <p className="text-sm text-yellow-700 dark:text-yellow-200">
                   {!activeApiKey 
-                    ? "No API key set. Please add your OpenAI API key in settings to start chatting."
+                    ? "No API key set. Please add your Google Gemini API key in settings to start chatting."
                     : "No AI model selected. Please set up your preferred model in settings to start chatting."
                   }
                 </p>
