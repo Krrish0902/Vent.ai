@@ -133,11 +133,6 @@ export const RoomInterface: React.FC = () => {
         className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
       >
         <div className={`max-w-[80%] ${isOwnMessage ? 'order-2' : 'order-1'}`}>
-          {message.type !== 'ai' && (
-            <div className={`text-xs mb-1 ${isOwnMessage ? 'text-right text-gray-500' : 'text-left text-gray-600 dark:text-gray-400'}`}>
-              {displayName}
-            </div>
-          )}
           <div className={`px-4 py-2 rounded-2xl ${
             message.type === 'ai' 
               ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
@@ -158,7 +153,7 @@ export const RoomInterface: React.FC = () => {
           </div>
         </div>
         {message.type !== 'ai' && (
-          <div className={`${isOwnMessage ? 'order-1 mr-3' : 'order-2 ml-3 mt-6'} flex-shrink-0`}>
+          <div className={`${isOwnMessage ? 'order-1 mr-3' : 'order-2 ml-3 mt-1'} flex-shrink-0`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
               isOwnMessage
                 ? 'bg-gradient-to-r from-green-400 to-yellow-500 text-white'

@@ -107,17 +107,24 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
 
   // Join room
   joinRoom: async (roomId: string) => {
+    console.log('joinRoom called with roomId:', roomId);
     try {
       // Check if room exists
       const room = await simpleRoomService.getRoom(roomId);
-      if (!room) return false;
+      console.log('Room found:', room);
+      if (!room) {
+        console.log('Room not found, returning false');
+        return false;
+      }
 
       const guestId = nanoid(8);
       const settingsState = useSettingsStore.getState();
       const guestName = settingsState.settings?.preferences.userName?.trim() || 'Guest';
+      console.log('Joining as guest:', { guestId, guestName });
       
       // Join room in database
       await simpleRoomService.joinRoom(roomId, guestId, guestName);
+      console.log('Successfully joined room in database');
       
       // Set local state
       set({
@@ -131,16 +138,21 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
         aiInProgress: room.aiInProgress,
         messages: room.messages
       });
+      console.log('Local state updated, roomId set to:', roomId);
 
       // Persist current room session
       try {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('lovelogic_current_room', JSON.stringify({ roomId, role: 'guest' }));
+          console.log('Room session persisted to localStorage');
         }
-      } catch {}
+      } catch (error) {
+        console.error('Failed to persist room session:', error);
+      }
 
       // Listen to room changes
       const unsubscribe = simpleRoomService.listenToRoom(roomId, (room) => {
+        console.log('Room update received:', room);
         if (!room) {
           // Room deleted by host – notify and leave
           try {
@@ -172,6 +184,7 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
 
       // Store cleanup function
       set({ _cleanup: unsubscribe });
+      console.log('Room listener set up, returning true');
 
       return true;
     } catch (error) {
@@ -276,7 +289,6 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
         throw new Error('No API key available. Please add your Gemini API key in settings.');
       }
       
-      console.log('API Key received:', apiKey.substring(0, 10) + '...', 'Length:', apiKey.length);
 
       // Create Gemini service instance - API key should be decrypted by the service
       const geminiService = new GeminiService(apiKey, 'Krrish', 'Couple', true);
@@ -319,11 +331,11 @@ Remember: You're helping two people who care about each other and want to improv
       const response = await geminiService.sendMessage([
         {
           id: nanoid(),
-          type: 'chat',
+          threadId: roomId,
           sender: 'user',
           content: couplePrompt,
           timestamp: new Date(),
-          conversationId: roomId
+          status: 'sent'
         }
       ], 'gemini-1.5-flash', 'perspective');
 

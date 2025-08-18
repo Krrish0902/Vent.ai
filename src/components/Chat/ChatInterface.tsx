@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircleHeart, Settings } from 'lucide-react';
+import { MessageCircleHeart, Settings, Plus } from 'lucide-react';
 import { useMessageStore } from '../../stores/messageStore';
 import { useThreadStore } from '../../stores/threadStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -13,7 +13,7 @@ import type { ConversationMode } from '../../types/message';
 
 export const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { currentThreadId } = useThreadStore();
+  const { currentThreadId, createThread, setCurrentThread } = useThreadStore();
   const { getThreadMessages, typingStatus, loadMessages } = useMessageStore();
   const { settings, openSettings } = useSettingsStore();
   const { sendMessage, isLoading } = useChat();
@@ -41,6 +41,15 @@ export const ChatInterface: React.FC = () => {
     await sendMessage(content, currentMode);
   };
 
+  const handleNewThread = async () => {
+    try {
+      const threadId = await createThread(currentMode);
+      setCurrentThread(threadId);
+    } catch (error) {
+      console.error('Failed to create thread:', error);
+    }
+  };
+
   if (!currentThreadId) {
     return (
       <div className="flex-1 flex items-center justify-center mt-52 from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-black dark:to-gray-900 px-6">
@@ -61,6 +70,22 @@ export const ChatInterface: React.FC = () => {
               : `Your pocket-sized best friend for all things relationships. Whether you need to vent, get a reality check, or just process your feelings - ${aiName} is here with zero judgment and endless patience.`
             }
           </p>
+          
+          {/* New Thread Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <button
+              onClick={handleNewThread}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Start New Conversation
+            </button>
+          </motion.div>
           
           {/* User Name Suggestion Card */}
           {(!userName || !aiModel) && (

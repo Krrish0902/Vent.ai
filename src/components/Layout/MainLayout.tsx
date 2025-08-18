@@ -27,11 +27,20 @@ export const MainLayout: React.FC = () => {
   }, [resumeRoomFromStorage]);
 
   const hasApiKeys = (settings?.apiKeys?.length ?? 0) > 0;
-  const needsSetup = !hasApiKeys;
+  const needsSetup = !hasApiKeys && !roomId; // Only show setup if no API keys AND no room
 
   if (needsSetup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-black dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-black dark:to-gray-900 flex flex-col overflow-hidden">
+      <Header
+        onSettingsClick={openSettings}
+        onMenuClick={() => setShowSidebar(false)}
+        onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        showMenuButton={true}
+        sidebarCollapsed={sidebarCollapsed}
+        hasApiKeys={false}
+      />
+      <div className="flex-1 flex overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -49,6 +58,7 @@ export const MainLayout: React.FC = () => {
 
           <ApiKeySetup />
         </motion.div>
+        </div>
       </div>
     );
   }
@@ -61,6 +71,7 @@ export const MainLayout: React.FC = () => {
         onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         showMenuButton={true}
         sidebarCollapsed={sidebarCollapsed}
+        hasApiKeys={hasApiKeys}
       />
 
       <div className="flex-1 flex overflow-hidden">

@@ -4,6 +4,8 @@ import { MainLayout } from './components/Layout/MainLayout';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { useSettingsStore } from './stores/settingsStore';
 import { Heart } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App() {
   const { loadSettings, settings } = useSettingsStore();
@@ -44,6 +46,8 @@ function App() {
     <BrowserRouter>
       <MainLayout />
       <SettingsModal />
+      <Analytics />
+      <SpeedInsights />
     </BrowserRouter>
   );
 }

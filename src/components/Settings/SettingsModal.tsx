@@ -16,7 +16,7 @@ type SettingsTab = 'preferences' | 'api-keys' | 'data' | 'privacy';
 
 export const SettingsModal: React.FC<SettingsModalProps> = () => {
   const { isSettingsOpen, closeSettings } = useSettingsStore();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('api-keys');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('preferences');
   const { settings, updatePreferences, getActiveApiKey } = useSettingsStore();
   const [validatedModels, setValidatedModels] = useState<ValidatedModel[] | null>(null);
   const [modelsError, setModelsError] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Heart, Menu, PanelLeftClose, PanelLeft, Plus, Users, Bug } from 'lucide-react';
+import { Settings, Heart, Menu, PanelLeftClose, PanelLeft, DoorOpen , Users, Bug } from 'lucide-react';
 import { Button } from '../UI/Button';
 import { useThreadStore } from '../../stores/threadStore';
 import { useSimpleRoomStore } from '../../stores/simpleRoomStore';
@@ -14,6 +14,7 @@ interface HeaderProps {
   onSidebarToggle?: () => void;
   showMenuButton?: boolean;
   sidebarCollapsed?: boolean;
+  hasApiKeys?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -21,7 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onMenuClick, 
   onSidebarToggle,
   showMenuButton = false,
-  sidebarCollapsed = false
+  sidebarCollapsed = false,
+  hasApiKeys = false
 }) => {
   const { setCurrentThread } = useThreadStore();
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -42,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* Mobile menu button */}
-          {showMenuButton && !roomId && (
+          {showMenuButton && !roomId && hasApiKeys && (
             <Button
               variant="ghost"
               size="sm"
@@ -54,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           
           {/* Desktop sidebar toggle */}
-          {onSidebarToggle && !roomId && (
+          {onSidebarToggle && !roomId && hasApiKeys && (
             <Button
               variant="ghost"
               size="sm"
@@ -86,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center space-x-2">
           {/* Room Creation Button */}
-          {!roomId && (
+          {!roomId && hasApiKeys && (
             <Button
               variant="ghost"
               size="sm"
@@ -94,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400"
               title="Create Couple's Room"
             >
-              <Plus className="w-5 h-5" />
+              <DoorOpen className="w-5 h-5" />
             </Button>
           )}
 
@@ -111,10 +113,9 @@ export const Header: React.FC<HeaderProps> = ({
             </Button>
           )}
 
-          {/* Debug Button */}
-
 
           {/* Settings Button */}
+          {hasApiKeys && (
           <Button
             variant="ghost"
             size="sm"
@@ -123,6 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Settings className="w-5 h-5" />
           </Button>
+          )}
         </div>
       </div>
     </motion.header>
