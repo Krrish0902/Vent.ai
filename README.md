@@ -29,6 +29,14 @@ A friendly AI companion that listens, validates, and offers gentle perspective w
 - **Message History**: Keep track of your chats like text history with a friend
 - **Export/Import**: Backup and restore your conversations
 
+### 💑 Couple's Room 
+- **Create/Join via Room ID**: One partner creates a room and shares the code; the other joins
+- **Real-time Sync**: Messages and states sync instantly via Firebase Realtime Database
+- **Double-Confirmation AI Advice**: Both partners tap Ready; host triggers AI only when both are ready
+- **Host-only AI Call**: Uses the host's API key; AI responses appear for both
+- **End Session**: Host can end the session (both are notified)
+- **Resume After Refresh**: Auto-reopen the room if the tab is refreshed
+
 ### 🔒 Privacy & Security
 - **Local Storage**: All data stored on your device
 - **Encrypted API Keys**: AES-256 encryption for API credentials
@@ -104,7 +112,7 @@ Vent.ai/
 - **Styling**: Tailwind CSS with dark mode support
 - **State Management**: Zustand
 - **Animations**: Framer Motion
-- **Database**: Dexie (IndexedDB wrapper)
+- **Database**: Firebase Realtime Database (rooms) + Dexie/IndexedDB (local threads/settings)
 - **Encryption**: CryptoJS
 - **Icons**: Lucide React
 - **Date Handling**: date-fns
@@ -148,6 +156,11 @@ Vent.ai uses Google's Gemini models to be your supportive friend. Your AI compan
 - **Pin**: Pin important conversations for quick access
 - **Archive**: Archive old conversations to keep your list organized
 - **Delete**: Permanently delete conversations when needed
+
+### Couple's Room
+- Create a room from the header, share the code, and have your partner join
+- Both tap Ready to enable host-only “Get AI Advice”
+- End session anytime from the room header; refreshes will auto-resume your room
 
 ### Customization
 - **Friend's Name**: Give your AI companion a name that feels right

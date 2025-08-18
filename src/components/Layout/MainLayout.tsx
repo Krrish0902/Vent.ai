@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Menu, ChevronLeft } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useSimpleRoomStore } from '../../stores/simpleRoomStore';
 import { Header } from './Header';
 import { ThreadList } from '../Sidebar/ThreadList';
 import { ChatInterface } from '../Chat/ChatInterface';
+import { RoomInterface } from '../Room/RoomInterface';
 
 import { ApiKeySetup } from '../Settings/ApiKeySetup';
 
@@ -13,10 +15,16 @@ export const MainLayout: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { settings, loadSettings } = useSettingsStore();
+  const { roomId, resumeRoomFromStorage } = useSimpleRoomStore();
 
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  useEffect(() => {
+    // Attempt to resume room if one exists in storage
+    resumeRoomFromStorage();
+  }, [resumeRoomFromStorage]);
 
   const hasApiKeys = (settings?.apiKeys?.length ?? 0) > 0;
   const needsSetup = !hasApiKeys;
@@ -50,42 +58,46 @@ export const MainLayout: React.FC = () => {
       <Header
         onSettingsClick={openSettings}
         onMenuClick={() => setShowSidebar(true)}
+        onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         showMenuButton={true}
+        sidebarCollapsed={sidebarCollapsed}
       />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Desktop Sidebar */}
-        <motion.div
-          initial={false}
-          animate={{
-            width: sidebarCollapsed ? 60 : 320,
-          }}
-          transition={{
-            duration: 0.3,
-            ease: "easeInOut"
-          }}
-          className="hidden md:block relative flex-shrink-0 border-r border-white/20 dark:border-gray-700/20"
-        >
-          <ThreadList isCollapsed={sidebarCollapsed} />
-
-          {/* Sidebar edge toggle handle (desktop only) */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="hidden md:flex items-center justify-center absolute top-1/2 -right-3 -translate-y-1/2 w-7 h-12 rounded-md shadow-md bg-white/90 dark:bg-gray-800/90 border border-white/30 dark:border-gray-700/40 hover:bg-white dark:hover:bg-gray-800 transition-colors z-20"
+        {!roomId && (
+          <motion.div
+            initial={false}
+            animate={{
+              width: sidebarCollapsed ? 60 : 320,
+            }}
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut"
+            }}
+            className="hidden md:block relative flex-shrink-0 border-r border-white/20 dark:border-gray-700/20"
           >
-            {sidebarCollapsed ? (
-              <Menu className="w-4 h-4 text-gray-700 dark:text-gray-200" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-gray-700 dark:text-gray-200" />
-            )}
-          </button>
-        </motion.div>
+            <ThreadList isCollapsed={sidebarCollapsed} />
+
+            {/* Sidebar edge toggle handle (desktop only) */}
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="hidden md:flex items-center justify-center absolute top-1/2 -right-3 -translate-y-1/2 w-7 h-12 rounded-md shadow-md bg-white/90 dark:bg-gray-800/90 border border-white/30 dark:border-gray-700/40 hover:bg-white dark:hover:bg-gray-800 transition-colors z-20"
+            >
+              {sidebarCollapsed ? (
+                <Menu className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+              ) : (
+                <ChevronLeft className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+              )}
+            </button>
+          </motion.div>
+        )}
 
         {/* Mobile Sidebar */}
         <AnimatePresence>
-          {showSidebar && (
+          {showSidebar && !roomId && (
             <>
               <motion.div
                 initial={{ opacity: 0 }}
@@ -109,7 +121,7 @@ export const MainLayout: React.FC = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 overflow-hidden">
-          <ChatInterface />
+          {roomId ? <RoomInterface /> : <ChatInterface />}
         </div>
       </div>
 

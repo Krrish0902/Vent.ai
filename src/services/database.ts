@@ -8,15 +8,17 @@ export class RileyDatabase extends Dexie {
   messages!: Table<Message>;
   settings!: Table<AppSettings>;
   drafts!: Table<MessageDraft>;
+  rooms!: Table<any>;
 
   constructor() {
     super('VentDB');
     
-    this.version(1).stores({
+    this.version(2).stores({
       threads: 'id, title, createdAt, updatedAt, isArchived, isPinned',
       messages: 'id, threadId, sender, timestamp, status',
       settings: 'id',
-      drafts: 'threadId, lastSaved'
+      drafts: 'threadId, lastSaved',
+      rooms: 'id, hostId, guestId, createdAt, updatedAt, status'
     });
   }
 }
