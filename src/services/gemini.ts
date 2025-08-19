@@ -151,6 +151,16 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
     mode: ConversationMode = 'general'
   ): Promise<ChatCompletionResponse> {
     try {
+      // Check if this is a couple's room scenario (long prompt with specific couple instructions)
+      const isCouplesRoom = messages.some(msg => 
+        msg.content.includes('couple') || 
+        msg.content.includes('both partners') || 
+        msg.content.includes('CONVERSATION CONTEXT') ||
+        msg.content.includes('RUNNING SUMMARY') ||
+        msg.content.includes('trusted third wheel') ||
+        msg.content.includes('group chat')
+      );
+
       // Convert messages to Gemini format
       const geminiMessages = messages.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
@@ -160,18 +170,37 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
       // Extract the actual model name (remove 'models/' prefix if present)
       const actualModelName = model.replace('models/', '');
       
-      const data = await this.makeApiRequest<any>('/models/' + actualModelName + ':generateContent', 'POST', {
-        contents: [
-          { role: 'user', parts: [{ text: this.getSystemPromptForMode(mode) }] },
-          ...geminiMessages
-        ],
-        generationConfig: {
-          maxOutputTokens: 1000,
-          temperature: mode === 'perspective' ? 0.7 : 0.8,
-          topP: 0.9,
-          topK: 40
-        }
-      });
+      let requestBody: any;
+      
+      if (isCouplesRoom) {
+        // For couple's room, use the message content directly without additional system prompt
+        console.log('Detected couple\'s room scenario, using direct prompt');
+        requestBody = {
+          contents: geminiMessages,
+          generationConfig: {
+            maxOutputTokens: 1000,
+            temperature: 0.7,
+            topP: 0.9,
+            topK: 40
+          }
+        };
+      } else {
+        // For regular one-on-one chat, use the standard system prompt
+        requestBody = {
+          contents: [
+            { role: 'user', parts: [{ text: this.getSystemPromptForMode(mode) }] },
+            ...geminiMessages
+          ],
+          generationConfig: {
+            maxOutputTokens: 1000,
+            temperature: mode === 'perspective' ? 0.7 : 0.8,
+            topP: 0.9,
+            topK: 40
+          }
+        };
+      }
+      
+      const data = await this.makeApiRequest<any>('/models/' + actualModelName + ':generateContent', 'POST', requestBody);
 
       const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const tokens = data.usageMetadata?.totalTokenCount || 0;

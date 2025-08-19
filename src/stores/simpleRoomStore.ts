@@ -5,6 +5,7 @@ import { simpleRoomService, SimpleRoomData } from '../services/simpleRoomService
 import { GeminiService } from '../services/gemini';
 import { useSettingsStore } from './settingsStore';
 
+
 interface SimpleRoomState {
   // Room state
   roomId: string | null;
@@ -29,6 +30,7 @@ interface SimpleRoomState {
   setReadyStatus: (isReady: boolean) => Promise<void>;
   requestAIAdvice: (apiKey: string) => Promise<void>;
   resumeRoomFromStorage: () => Promise<boolean>;
+  generateConversationSummary: (messages: RoomMessage[], hostName?: string, guestName?: string) => Promise<string>;
   
   // Internal
   _cleanup: () => void;
@@ -50,6 +52,7 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
     const hostId = nanoid(8);
     const settingsState = useSettingsStore.getState();
     const hostName = settingsState.settings?.preferences.userName?.trim() || 'Host';
+    
     
     // Create room in database
     await simpleRoomService.createRoom(roomId, hostId, hostName);
@@ -73,6 +76,7 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
         window.localStorage.setItem('lovelogic_current_room', JSON.stringify({ roomId, role: 'host' }));
       }
     } catch {}
+
 
     // Listen to room changes
     const unsubscribe = simpleRoomService.listenToRoom(roomId, (room) => {
@@ -289,6 +293,10 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
         throw new Error('No API key available. Please add your Gemini API key in settings.');
       }
       
+      // Get AI name from settings
+      const settingsState = useSettingsStore.getState();
+      const aiName = settingsState.settings?.preferences.aiName || 'Krrish';
+      const model = settingsState.settings?.preferences.aiModel || 'gemini-1.5-flash';
 
       // Create Gemini service instance - API key should be decrypted by the service
       const geminiService = new GeminiService(apiKey, 'Krrish', 'Couple', true);
@@ -299,33 +307,106 @@ export const useSimpleRoomStore = create<SimpleRoomState>((set, get) => ({
         .map(msg => `${msg.sender === 'host' ? (hostName || 'Host') : (guestName || 'Guest')}: ${msg.content}`)
         .join('\n');
 
-      // Create couple-specific prompt
-      const couplePrompt = `You are Krrish, a wise and caring relationship advisor. A couple has shared their conversation with you and is seeking advice together.
+      console.log('Conversation context being sent to AI:', conversationContext);
+      console.log('Total messages in room:', messages.length);
+      console.log('Chat messages found:', messages.filter(msg => msg.type === 'chat').length);
 
-CONVERSATION CONTEXT:
+      // Generate running summary of the conversation
+      const runningSummary = await get().generateConversationSummary(messages, hostName, guestName);
+
+      // Create couple-specific prompt with rolling memory
+      const couplePrompt = `${aiName} — the trusted third wheel/best friend in a couple's group chat. You're warm, real, and on the side of "you two as a team." This is an ongoing conversation (not a one-off). Stay consistent, remember context, and follow up naturally.
+
+YOUR JOB
+
+Listen first; reflect what both partners are feeling.
+
+Keep the thread's memory: recall earlier points, agreements, and themes.
+
+Offer gentle perspective and tiny, practical next steps — only when it helps.
+
+Stay casual and human. You're a friend, not a therapist.
+
+CONTEXT YOU'LL RECEIVE
+
+A rolling transcript of this room with messages from Partner A, Partner B, and you (${aiName}).
+
+You may see recent slices plus a compact summary of prior turns.
+
+HOW TO RESPOND (DYNAMIC)
+
+If someone is venting or emotional:
+
+Validate briefly and sincerely.
+
+Ask 1 caring, clarifying question.
+
+Hold off on advice unless they ask or it's clearly helpful.
+
+If they asked for take/advice:
+
+Offer 1–3 small, concrete suggestions (scripts, rituals, a tiny experiment).
+
+Keep it doable within a day/week.
+
+If they made progress or tried something:
+
+Acknowledge it. Reinforce the win.
+
+Offer a tiny next step or a reflective question to deepen understanding.
+
+If they're stuck/repeating a loop:
+
+Gently name the pattern (never shamey).
+
+Suggest a small reset and a script to try.
+
+MEMORY & CONTINUITY
+
+Refer back to earlier facts ("last time you said…", "earlier you both agreed…").
+
+Track themes: feeling unheard, timing, tone, repair attempts, expectations.
+
+Keep names/pronouns consistent if provided.
+
+TONE
+
+Warm, human, concise. Casual language ok: "oof," "that sounds rough," "from the outside…"
+
+Never clinical, never judgey, never take sides.
+
+A little humor only if it lightens the moment appropriately.
+
+Emojis: light touch only when it adds warmth (✨🤝💬).
+
+BOUNDARIES
+
+No medical/legal advice. If harm or abuse is hinted, suggest talking to a trusted person or professional.
+
+You're a supportive friend. Focus on communication, curiosity, and assuming good intent.
+
+OUTPUT SHAPE (adaptive, keep it short)
+
+What I'm hearing: 1–2 lines reflecting both sides.
+
+Follow-up: 1 caring question OR 1–2 specific suggestions (if asked/appropriate).
+
+Nudge: a tiny, practical next step (optional).
+
+Encouragement: 1 short line with warm energy (1 emoji max).
+
+If you reference the past, be precise but brief.
+
+Keep replies ~3–6 short paragraphs max. Avoid bullet lists unless it improves clarity for suggestions.
+
+RUNNING SUMMARY (for context memory):
+${runningSummary}
+
+RECENT MESSAGES (newest last):
 ${conversationContext}
 
-YOUR ROLE:
-• You are speaking to BOTH partners together
-• Offer balanced, thoughtful relationship advice
-• Be supportive and non-judgmental
-• Focus on communication, understanding, and growth
-• Address both perspectives when possible
+Respond as ${aiName} now. Remember: keep it warm, brief, and context-aware. Avoid rehashing what's obvious; add value with reflection, follow-ups, and tiny next steps.`;
 
-ADVICE APPROACH:
-• Start with validation and understanding
-• Offer specific, actionable suggestions
-• Encourage open communication between partners
-• Be encouraging and positive about their relationship
-• Use warm, supportive language
-
-RESPONSE FORMAT:
-• Keep it conversational and friendly
-• Offer 2-3 specific pieces of advice
-• End with an encouraging note
-• Use appropriate emojis to keep it warm
-
-Remember: You're helping two people who care about each other and want to improve their relationship. Be the supportive friend who helps them see each other's perspectives and grow together.`;
 
       // Send to Gemini API
       const response = await geminiService.sendMessage([
@@ -337,14 +418,39 @@ Remember: You're helping two people who care about each other and want to improv
           timestamp: new Date(),
           status: 'sent'
         }
-      ], 'gemini-1.5-flash', 'perspective');
+      ], model, 'perspective');
+
+    
+
+      // Extract meaningful response, filtering out structural parts
+      let cleanedContent = response.content;
+      
+      // Remove "What I'm hearing:" section (including multiline content until next section or end)
+      cleanedContent = cleanedContent.replace(/^What I'm hearing:.*?(?=\n\n[A-Z]|\n\n$|$)/is, '');
+      
+      // Remove various section labels but keep their content
+      cleanedContent = cleanedContent.replace(/^Follow-up:\s*/im, '');
+      cleanedContent = cleanedContent.replace(/^Nudge:\s*/im, '');
+      cleanedContent = cleanedContent.replace(/^Encouragement:\s*/im, '');
+      cleanedContent = cleanedContent.replace(/^You've got this:\s*/im, '');
+      
+      // Remove "A question to think about:" label
+      cleanedContent = cleanedContent.replace(/^A question to think about:\s*/im, '');
+      
+      // Remove "A few ideas to try:" label
+      cleanedContent = cleanedContent.replace(/^A few ideas to try:\s*/im, '');
+      
+      // Clean up any extra whitespace and empty lines
+      cleanedContent = cleanedContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+      
+      console.log('Cleaned AI response:', cleanedContent);
 
       // Create AI response message
       const aiResponse: RoomMessage = {
         id: nanoid(),
         type: 'ai',
         sender: 'ai',
-        content: response.content,
+        content: cleanedContent,
         timestamp: new Date()
       };
 
@@ -425,6 +531,71 @@ Remember: You're helping two people who care about each other and want to improv
     } catch (e) {
       return false;
     }
+  },
+
+  // Generate conversation summary
+  generateConversationSummary: async (messages: RoomMessage[], hostName?: string, guestName?: string) => {
+    const host = hostName || 'Host';
+    const guest = guestName || 'Guest';
+    
+    if (messages.length === 0) {
+      return `New conversation between ${host} and ${guest}. No messages yet.`;
+    }
+
+    const chatMessages = messages.filter(msg => msg.type === 'chat');
+    if (chatMessages.length === 0) {
+      return `Conversation between ${host} and ${guest}. No chat messages yet.`;
+    }
+
+    // Analyze conversation content
+    const hostMessages = chatMessages.filter(msg => msg.sender === 'host');
+    const guestMessages = chatMessages.filter(msg => msg.sender === 'guest');
+    
+    // Detect themes and patterns
+    const allContent = chatMessages.map(msg => msg.content.toLowerCase());
+    const themes = [];
+    
+    if (allContent.some(content => content.includes('angry') || content.includes('upset') || content.includes('frustrated'))) {
+      themes.push('conflict resolution');
+    }
+    if (allContent.some(content => content.includes('communication') || content.includes('talk') || content.includes('discuss'))) {
+      themes.push('communication improvement');
+    }
+    if (allContent.some(content => content.includes('love') || content.includes('care') || content.includes('appreciate'))) {
+      themes.push('emotional connection');
+    }
+    if (allContent.some(content => content.includes('time') || content.includes('busy') || content.includes('schedule'))) {
+      themes.push('time management');
+    }
+    if (allContent.some(content => content.includes('trust') || content.includes('jealous') || content.includes('insecurity'))) {
+      themes.push('trust and security');
+    }
+
+    // Detect emotional tone
+    let tone = 'neutral';
+    if (allContent.some(content => content.includes('😊') || content.includes('happy') || content.includes('good'))) {
+      tone = 'positive';
+    } else if (allContent.some(content => content.includes('😔') || content.includes('sad') || content.includes('bad'))) {
+      tone = 'negative';
+    } else if (allContent.some(content => content.includes('😤') || content.includes('angry') || content.includes('frustrated'))) {
+      tone = 'heated';
+    }
+
+    // Count messages to see engagement
+    const totalMessages = chatMessages.length;
+    const hostEngagement = hostMessages.length;
+    const guestEngagement = guestMessages.length;
+
+    const summary = [
+      `Conversation between ${host} and ${guest}:`,
+      `Total messages: ${totalMessages}`,
+      `Engagement: ${host} (${hostEngagement}), ${guest} (${guestEngagement})`,
+      `Themes: ${themes.length > 0 ? themes.join(', ') : 'general discussion'}`,
+      `Tone: ${tone}`,
+      `Recent focus: ${chatMessages.slice(-3).map(msg => `${msg.sender === 'host' ? host : guest}: "${msg.content.substring(0, 50)}${msg.content.length > 50 ? '...' : ''}"`).join(' | ')}`
+    ];
+
+    return summary.join('\n');
   },
 
   // Cleanup function
