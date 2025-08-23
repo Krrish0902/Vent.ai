@@ -41,24 +41,26 @@ export const MainLayout: React.FC = () => {
         hasApiKeys={false}
       />
       <div className="flex-1 flex overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/20 p-8"
-        >
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full mb-4">
-              <Heart className="w-8 h-8 text-white" />
+        <div className="w-full flex items-center justify-center p-4 overflow-y-auto scrollbar-hide">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/20 p-8 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-hide"
+          >
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full mb-4">
+                <Heart className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Vent.ai</h1>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">
+                Your compassionate AI relationship counselor. Let's get you set up.
+              </p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Vent.ai</h1>
-            <p className="text-gray-600 dark:text-gray-300 text-lg">
-              Your compassionate AI relationship counselor. Let's get you set up.
-            </p>
-          </div>
 
-          <ApiKeySetup />
-        </motion.div>
+            <ApiKeySetup />
+          </motion.div>
         </div>
+      </div>
       </div>
     );
   }

@@ -26,7 +26,7 @@ export const RoomInterface: React.FC = () => {
     leaveRoom
   } = useSimpleRoomStore();
 
-  const { getActiveApiKey } = useSettingsStore();
+  const { getActiveApiKey,settings } = useSettingsStore();
 
   // Debug logging removed for cleaner UI
 
@@ -39,6 +39,8 @@ export const RoomInterface: React.FC = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  const aiName = settings?.preferences.aiName || 'Krrish';
 
   const handleSendMessage = async () => {
     if (messageInput.trim()) {
@@ -145,7 +147,7 @@ export const RoomInterface: React.FC = () => {
             {message.type === 'ai' && (
               <div className="flex items-center space-x-2 mb-1">
                 <Bot className="w-3 h-3" />
-                <span className="text-xs opacity-90">AI Advice</span>
+                <span className="text-xs opacity-90">{aiName}</span>
               </div>
             )}
             {message.type === 'ai' ? (

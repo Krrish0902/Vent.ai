@@ -420,30 +420,44 @@ Respond as ${aiName} now. Remember: keep it warm, brief, and context-aware. Avoi
         }
       ], model, 'perspective');
 
-    
+      console.log('Full API response:', response);
+      console.log('Response content type:', typeof response.content);
+      console.log('Response content length:', response.content?.length || 0);
 
       // Extract meaningful response, filtering out structural parts
       let cleanedContent = response.content;
       
-      // Remove "What I'm hearing:" section (including multiline content until next section or end)
-      cleanedContent = cleanedContent.replace(/^What I'm hearing:.*?(?=\n\n[A-Z]|\n\n$|$)/is, '');
+      console.log('Raw AI response:', cleanedContent);
       
-      // Remove various section labels but keep their content
-      cleanedContent = cleanedContent.replace(/^Follow-up:\s*/im, '');
-      cleanedContent = cleanedContent.replace(/^Nudge:\s*/im, '');
-      cleanedContent = cleanedContent.replace(/^Encouragement:\s*/im, '');
-      cleanedContent = cleanedContent.replace(/^You've got this:\s*/im, '');
+      // Only clean if the content follows the expected format
+      if (cleanedContent && cleanedContent.trim()) {
+        // Remove section labels but keep their content - be more conservative
+        cleanedContent = cleanedContent.replace(/^What I'm hearing:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^Follow-up:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^Nudge:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^Encouragement:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^You've got this:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^A question to think about:\s*/im, '');
+        cleanedContent = cleanedContent.replace(/^A few ideas to try:\s*/im, '');
+        
+        // Clean up any extra whitespace and empty lines
+        cleanedContent = cleanedContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+      }
       
-      // Remove "A question to think about:" label
-      cleanedContent = cleanedContent.replace(/^A question to think about:\s*/im, '');
+      // Fallback: if cleaning resulted in empty content, use the original
+      if (!cleanedContent || cleanedContent.trim() === '') {
+        console.warn('Content cleaning resulted in empty response, using original');
+        cleanedContent = response.content;
+      }
       
-      // Remove "A few ideas to try:" label
-      cleanedContent = cleanedContent.replace(/^A few ideas to try:\s*/im, '');
+      // Final fallback: if still empty, create a default response
+      if (!cleanedContent || cleanedContent.trim() === '') {
+        console.error('Both cleaned and original content are empty, creating default response');
+        cleanedContent = "I'm here to help! I've been listening to your conversation and I'm ready to offer some perspective. What would you like to discuss or work through together?";
+      }
       
-      // Clean up any extra whitespace and empty lines
-      cleanedContent = cleanedContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
-      
-      console.log('Cleaned AI response:', cleanedContent);
+      console.log('Final AI response content:', cleanedContent);
+      console.log('Final content length:', cleanedContent.length);
 
       // Create AI response message
       const aiResponse: RoomMessage = {

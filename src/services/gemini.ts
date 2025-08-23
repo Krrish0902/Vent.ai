@@ -178,7 +178,7 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
         requestBody = {
           contents: geminiMessages,
           generationConfig: {
-            maxOutputTokens: 1000,
+            maxOutputTokens: 9000,
             temperature: 0.7,
             topP: 0.9,
             topK: 40
@@ -192,7 +192,7 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
             ...geminiMessages
           ],
           generationConfig: {
-            maxOutputTokens: 1000,
+            maxOutputTokens: 6000,
             temperature: mode === 'perspective' ? 0.7 : 0.8,
             topP: 0.9,
             topK: 40
@@ -202,7 +202,29 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
       
       const data = await this.makeApiRequest<any>('/models/' + actualModelName + ':generateContent', 'POST', requestBody);
 
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      console.log('Raw Gemini API response:', JSON.stringify(data, null, 2));
+      
+      // Check if we have candidates
+      if (!data.candidates || data.candidates.length === 0) {
+        console.error('No candidates in Gemini response:', data);
+        throw new Error('No response generated from Gemini API');
+      }
+      
+      // Check if we have content
+      if (!data.candidates[0]?.content?.parts || data.candidates[0].content.parts.length === 0) {
+        console.error('No content parts in Gemini response:', data.candidates[0]);
+        throw new Error('No content generated from Gemini API');
+      }
+      
+      const content = data.candidates[0].content.parts[0].text || '';
+      console.log('Extracted content from Gemini response:', content);
+      console.log('Content length:', content.length);
+      
+      if (!content || content.trim() === '') {
+        console.error('Empty content from Gemini API');
+        throw new Error('Empty response from Gemini API');
+      }
+      
       const tokens = data.usageMetadata?.totalTokenCount || 0;
       const cost = this.calculateCost(tokens, model);
 
@@ -210,6 +232,9 @@ When appropriate, start your response with an emoji reaction enclosed in [REACT:
       const reactionMatch = content.match(/^\[REACT:([^\]]+)\]/);
       const reaction = reactionMatch ? reactionMatch[1] : undefined;
       const cleanContent = reactionMatch ? content.replace(/^\[REACT:[^\]]+\]\s*/, '') : content;
+
+      console.log('Final clean content:', cleanContent);
+      console.log('Final content length:', cleanContent.length);
 
       return { content: cleanContent, tokens, cost, reaction };
     } catch (error) {

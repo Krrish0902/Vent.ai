@@ -68,4 +68,18 @@
   .custom-scrollbar-thin {
     scrollbar-gutter: stable;
   }
+
+  /* Hide scrollbar completely while maintaining scroll functionality */
+  .scrollbar-hide {
+    /* Webkit browsers */
+    -webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Firefox */
+    scrollbar-width: none;
+    
+    /* IE and Edge */
+    -ms-overflow-style: none;
+  }
 }
